@@ -1,0 +1,21 @@
+{
+  "name": "pawpawpicnic",
+  "version": "1.0.0",
+  "description": "",
+  "main": "game-v1-backup.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "vite": "^8.3.4"
+  }
+}
