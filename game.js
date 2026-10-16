@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
-// Paw Paw Picnic 5.4 — habitat-specific harvesting, based on 5.3.
+// Paw Paw Picnic 5.5 — miniature-world art pass, responsive recipe choice, quick travel, original music.
 // 全部模型、格纹、文字均由程序创建；不加载参考图片。
 const $ = s => document.querySelector(s);
 const scene = new THREE.Scene();
@@ -26,6 +26,11 @@ controls.maxDistance = 30;
 controls.minPolarAngle = .35;
 controls.maxPolarAngle = Math.PI / 2.15;
 function view() { camera.position.set(8.6, 14.8, 20.8).multiplyScalar(innerWidth < 650 ? 1.35 : 1); controls.update(); }
+const cameraHome=new THREE.Vector3(8.6,14.8,20.8);
+const cameraHomeTarget=new THREE.Vector3(0,2.1,-.5);
+const cameraKitchen=new THREE.Vector3(0,6.7,8.2);
+const cameraKitchenTarget=new THREE.Vector3(0,1.35,-.1);
+let cookingViewMix=0;
 view();
 scene.add(new THREE.HemisphereLight('#fffbeb', '#b49cae', 2.6));
 const sun = new THREE.DirectionalLight('#fff4dd', 4);
@@ -302,36 +307,57 @@ const gatherWorlds=Object.fromEntries([1,2,3,6,7,8,9,10].map(n=>[n,group(scene)]
 const gatherItems=[];
 const spots=[[-3.3,1.9],[-2.0,-2.0],[.1,2.9],[3.3,.6],[2.8,-2.6],[1.2,-1.5]];
 const RESPAWN_MS=30000;
+// 5.6: recognisable, rounded toy-food silhouettes rather than pointed primitives.
 function collectibleModel(parent,id){
- const [emoji,name,area,color]=ingredientCatalog[id];
- const g=group(parent);
- if(['mint','wheat'].includes(id)){
-  mesh(new THREE.CylinderGeometry(.025,.035,.5,5),'#8ca77b',g,0,.26,0);
-  for(let i=0;i<3;i++){const l=mesh(new THREE.ConeGeometry(.13,.27,5),color,g,(i-1)*.12,.30+i*.11,0);l.rotation.z=(i-1)*.65;}
- }else if(['carrot','lemon','strawberry','raspberry'].includes(id)){
-  const body=mesh(new THREE.ConeGeometry(.22,.42,7),color,g,0,.30,0);
-  body.rotation.z=id==='lemon'?Math.PI/2:Math.PI;
-  ball(g,'#84b282',0,.54,0,.12,.045,.12);
- }else if(['mushroom','hazelnut'].includes(id)){
-  mesh(new THREE.CylinderGeometry(.075,.10,.27,6),'#fff0da',g,0,.23,0);
-  mesh(new THREE.ConeGeometry(.25,.20,7),color,g,0,.46,0);
- }else if(id==='honey'){
-  mesh(new THREE.CylinderGeometry(.19,.21,.33,8),color,g,0,.28,0);
-  mesh(new THREE.CylinderGeometry(.21,.21,.065,8),'#fff1ca',g,0,.47,0);
- }else if(id==='pumpkin'){
-  for(let j=-1;j<=1;j++)ball(g,color,j*.12,.28,0,.17,.23,.21);
-  mesh(new THREE.CylinderGeometry(.04,.05,.14,6),'#8ea97b',g,0,.54,0);
- }else if(id==='tomato'){
-  ball(g,color,0,.30,0,.23,.21,.23);
-  mesh(new THREE.ConeGeometry(.13,.10,5),'#83ad80',g,0,.54,0);
+ const g=group(parent), c=ingredientCatalog[id][3];
+ const drop=(color,r=.23,h=.24,y=.31)=>ball(g,color,0,y,0,r,h,r);
+ const petal=(x,y,z,scale=.12,color='#86b68b')=>{const q=ball(g,color,x,y,z,scale,.045,scale*.62);q.rotation.z=x*.9;return q;};
+ if(id==='strawberry'||id==='raspberry'){
+  // Broad shoulders and a soft rounded bottom; strawberry tip is never a spike.
+  const rings=[];for(let i=0;i<=20;i++){const t=i/20;const r=.025+.255*Math.pow(Math.sin(Math.PI*t),.65)*(1-.18*t);rings.push(new THREE.Vector2(r,.11+t*.48));}
+  mesh(new THREE.LatheGeometry(rings,24),id==='strawberry'?'#ee7881':'#d56b91',g);
+  for(let j=0;j<6;j++){const a=j*Math.PI/3;petal(Math.sin(a)*.15,.61,Math.cos(a)*.15,.14,'#78ad7d');}
+  if(id==='strawberry')for(let row=0;row<3;row++)for(let j=0;j<7;j++){const a=j*Math.PI*2/7+row*.4;const y=.25+row*.105;const r=.245*Math.pow(Math.sin(Math.PI*(y-.11)/.48),.65);ball(g,'#ffe7b1',Math.sin(a)*r,y,Math.cos(a)*r,.014,.024,.012);}
+  else for(let i=0;i<13;i++){const a=i*2.4;ball(g,'#f3a2ad',Math.cos(a)*.17,.25+(i%4)*.08,Math.sin(a)*.17,.07,.07,.07);}
+ }else if(id==='lemon'){
+  const body=ball(g,'#f1d778',0,.33,0,.33,.23,.23);body.rotation.z=.2;
+  for(const sign of [-1,1])ball(g,'#f1d778',sign*.30,.33,0,.065,.08,.075);
+  petal(.13,.56,0,.16);
+ }else if(id==='carrot'){
+  const points=[new THREE.Vector2(.035,.05),new THREE.Vector2(.10,.12),new THREE.Vector2(.15,.25),new THREE.Vector2(.19,.40),new THREE.Vector2(.17,.54),new THREE.Vector2(.08,.58)];
+  mesh(new THREE.LatheGeometry(points,18),'#eda66f',g);
+  for(let i=-1;i<=1;i++){const l=ball(g,'#81b58b',i*.085,.72,0,.065,.20,.045);l.rotation.z=-i*.35;}
+  for(let y of [.30,.42])box(g,'#d78c59',.14,y,.10,.08,.014,.016,.004);
+ }else if(id==='mushroom'){
+  mesh(new THREE.CylinderGeometry(.11,.16,.34,12),'#fff3df',g,0,.23,0);
+  const cap=ball(g,'#e6a0ad',0,.47,0,.34,.18,.34);
+  for(let i=0;i<7;i++){const a=i*2.4;ball(g,'#fff7df',Math.cos(a)*.22,.55,Math.sin(a)*.22,.045,.018,.045);}
+ }else if(id==='cherry'){
+  for(const sign of [-1,1]){ball(g,'#d46778',sign*.16,.24,0,.17,.17,.16);const st=mesh(new THREE.CylinderGeometry(.018,.021,.37,8),'#86a979',g,sign*.09,.50,0);st.rotation.z=sign*.33;}
+  petal(.12,.70,0,.14);
+ }else if(id==='apple'||id==='peach'||id==='tomato'){
+  for(const sign of [-1,1])ball(g,c,sign*.09,.32,0,.19,.24,.22);
+  ball(g,c,0,.28,0,.24,.21,.23);
+  mesh(new THREE.CylinderGeometry(.024,.027,.15,8),'#9c805c',g,0,.60,0);petal(.14,.62,0,.16);
+  if(id==='peach')ball(g,'#f7c7a3',-.08,.32,.18,.10,.12,.04);
  }else if(id==='blueberry'){
-  for(let j=0;j<3;j++)ball(g,color,(j-1)*.16,.27+(j%2)*.14,0,.13,.13,.13);
- }else{
-  ball(g,color,0,.30,0,.23,.24,.22);
-  mesh(new THREE.CylinderGeometry(.025,.025,.12,5),'#8da579',g,0,.58,0);
- }
+  for(let i=0;i<6;i++){const a=i*2.4;ball(g,'#8492c6',Math.cos(a)*.16,.27+(i%3)*.12,Math.sin(a)*.13,.15,.15,.15);}
+  for(let i=0;i<3;i++)petal((i-1)*.12,.58,0,.12);
+ }else if(id==='pumpkin'){
+  for(let j=-2;j<=2;j++)ball(g,'#e7a76c',j*.09,.32,0,.20,.25,.26);
+  mesh(new THREE.CylinderGeometry(.04,.055,.16,8),'#86a875',g,0,.62,0);petal(.15,.62,0,.17);
+ }else if(id==='hazelnut'){
+  for(let j=-1;j<=1;j++){ball(g,'#b68c68',j*.17,.26,0,.16,.19,.15);petal(j*.17,.44,.03,.13,'#9caa79');}
+ }else if(id==='honey'){
+  box(g,'#e5b56d',0,.30,0,.45,.40,.35,.09);box(g,'#fff0b8',0,.54,0,.48,.10,.38,.04);
+  ball(g,'#f6d788',0,.34,.19,.15,.12,.025);
+ }else if(id==='mint'||id==='wheat'){
+  for(let i=0;i<4;i++){const x=(i-1.5)*.11;mesh(new THREE.CylinderGeometry(.019,.028,.50,7),'#8fa778',g,x,.28,0);
+   for(let j=0;j<3;j++){const l=ball(g,id==='mint'?'#8fc5a1':'#e5c37e',x+(j%2?.09:-.09),.28+j*.12,0,.13,.07,.08);l.rotation.z=(j%2?-.35:.35);}}
+ }else drop(c);
  return g;
 }
+
 // Each harvest point retains its plant / hive after the produce is collected.
 const harvestProfiles={
  strawberry:['摘下成熟果实'],raspberry:['摘下成熟果实'],blueberry:['摘下果串'],mint:['剪取嫩叶'],
@@ -346,11 +372,37 @@ function leaf(parent,x,y,z,size=.3,color='#83a779'){
  const m=mesh(new THREE.IcosahedronGeometry(size,0),color,parent,x,y,z);m.scale.set(1,.35,.65);return m;
 }
 function stem(parent,x,z,h=1){return mesh(new THREE.CylinderGeometry(.045,.06,h,5),'#7a9464',parent,x,h/2,z);}
-function lowTree(parent,x,z,h=2.4,color='#96b382'){
- const g=group(parent,x,0,z);mesh(new THREE.CylinderGeometry(.12,.22,h*.65,6),'#a47d5d',g,0,h*.325,0);
- for(let k=0;k<3;k++)mesh(new THREE.IcosahedronGeometry(.65,0),color,g,(k-1)*.42,h*.7+(k%2)*.36,0);
+// Distinct botanical silhouettes: every habitat keeps its own tree language.
+function lowTree(parent,x,z,h=2.4,color='#96b382',species='grove'){
+ const g=group(parent,x,0,z);
+ const trunk=mesh(new THREE.CylinderGeometry(.13,.24,h*.66,7),'#a47d5d',g,0,h*.33,0);
+ if(species==='orchard'){
+  for(const [dx,dy,dz,r] of [[0,.78,0,.66],[-.48,.64,.12,.54],[.48,.68,-.06,.57],[0,1.15,-.1,.48]]){
+   const crown=ball(g,color,dx,h*dy,dz,r,r*.74,r*.85);
+   crown.rotation.z=dx*.12;
+  }
+  for(let j=0;j<7;j++){const a=j*2.4;ball(g,'#e99789',Math.sin(a)*.59,h*(.76+(j%3)*.12),Math.cos(a)*.40,.115,.12,.115);}
+ }else if(species==='forest'){
+  for(let k=0;k<4;k++){
+   const cone=mesh(new THREE.ConeGeometry(.96-k*.13,.96,7),k%2?'#6f957b':color,g,0,h*(.47+k*.21),0);
+   cone.rotation.y=k*.36;
+  }
+  for(let j=0;j<5;j++)ball(g,'#a4bea0',Math.sin(j*2.4)*.43,h*(.56+j*.09),Math.cos(j*2.4)*.4,.10,.055,.12);
+ }else if(species==='creek'){
+  for(let k=0;k<3;k++){
+   const b=ball(g,k%2?'#9dc8b5':color,(k-1)*.24,h*(.72+k*.12),0,.42,.76,.42);
+   b.rotation.z=(k-1)*.15;
+  }
+ }else if(species==='courtyard'){
+  trunk.scale.y=.80;
+  const top=ball(g,color,0,h*.80,0,.67,.74,.68);
+  for(let j=0;j<7;j++){const a=j*Math.PI*2/7;ball(g,'#efcfbb',Math.sin(a)*.49,h*.85+Math.cos(a)*.36,Math.cos(a)*.40,.105,.10,.10);}
+ }else{
+  for(let k=0;k<3;k++)mesh(new THREE.IcosahedronGeometry(.65,0),color,g,(k-1)*.42,h*.7+(k%2)*.36,0);
+ }
  return g;
 }
+
 function plantPoint(g,id){
  const support=group(g), model=collectibleModel(g,id);let cover=null;
  const tool=group(g);tool.visible=false;let smoke=null;
@@ -366,7 +418,7 @@ function plantPoint(g,id){
  }else{mesh(new THREE.IcosahedronGeometry(.14,1),'#fff0d2',tool);}
 
  if(['apple','cherry','peach','lemon'].includes(id)){
-  lowTree(support,0,-.25,2.2,id==='peach'?'#a9b783':'#88a672');model.position.set(.48,1.25,.4);
+  lowTree(support,0,-.25,2.2,id==='peach'?'#a9b783':'#88a672','orchard');model.position.set(.48,1.25,.4);
  }else if(['strawberry','raspberry','blueberry','mint'].includes(id)){
   const h=id==='strawberry'?.3:id==='mint'?.45:.85;
   for(let k=0;k<5;k++){const a=k*1.256;stem(support,Math.cos(a)*.25,Math.sin(a)*.25,h);leaf(support,Math.cos(a)*.32,h,Math.sin(a)*.32,.38);}
@@ -439,7 +491,7 @@ function animateHarvest(dt){
  harvestBusy=null;i.tool.visible=false;if(i.smoke)i.smoke.visible=false;i.step++;
  if(i.cover)i.cover.visible=false;
  if(h.final){
-  i.taken=true;i.readyAt=Date.now()+RESPAWN_MS;i.model.visible=false;pantry[i.id]++;
+  i.taken=true;i.readyAt=Date.now()+RESPAWN_MS;i.model.visible=false;pantry[i.id]++;playSFX('pick');
   updateHUD();notifyHarvest(`${ingredientCatalog[i.id][0]} ${ingredientCatalog[i.id][1]} +1 · 30 秒后再生`);
  }else notifyHarvest('再按 E / 点击：'+harvestProfiles[i.id][i.step]);
 }
@@ -458,15 +510,15 @@ for(const [key,root] of Object.entries(gatherWorlds)){
  }else if(area===7){
   for(let k=0;k<12;k++){box(decor,'#87b9bb',-4.1+Math.sin(k*.6)*.2,.17,-3.2+k*.57,.65,.06,.65,.03);stone(-3.65+Math.sin(k*.6)*.2,-3.2+k*.57,.18);}
   for(let k=0;k<7;k++)box(decor,'#bd9674',-4.0,.29,.6+k*.16,1.2,.10,.13,.01);
-  for(let k=0;k<5;k++)lowTree(decor,-3.8+k*1.7,-3.4,1.4,'#81a89a');
+  for(let k=0;k<5;k++)lowTree(decor,-3.8+k*1.7,-3.4,1.4,'#81a89a','creek');
  }else if(area===2){
   rail(-3.4);rail(3.4);for(const x of [-4.2,4.2])for(let k=0;k<5;k++)stone(x,-2.7+k*1.2,.28,'#d9c59c');
   for(let k=0;k<3;k++)box(decor,'#bc9169',-1+k,.35,-3.15,.65,.5,.55,.04);
  }else if(area===8){
   for(let x=-4;x<=4;x++)for(let z=-3;z<=3;z++)box(decor,(x+z)%2?'#ddc9b6':'#cdb9a5',x,.17,z,.93,.06,.93,.02);
-  for(const x of [-4.2,4.2]){box(decor,'#c0a793',x,.45,-2.0,.3,.7,2.8,.03);mesh(new THREE.CylinderGeometry(.38,.25,.48,7),'#be8c75',decor,x,.4,2.8);lowTree(decor,x,2.8,1.5,'#c0b4a0');}
+  for(const x of [-4.2,4.2]){box(decor,'#c0a793',x,.45,-2.0,.3,.7,2.8,.03);mesh(new THREE.CylinderGeometry(.38,.25,.48,7),'#be8c75',decor,x,.4,2.8);lowTree(decor,x,2.8,1.5,'#c0b4a0','courtyard');}
  }else if(area===3){
-  for(let k=0;k<7;k++)lowTree(decor,-4.1+k*1.35,-3.3,2.4+(k%3)*.4,'#6f8973');
+  for(let k=0;k<7;k++)lowTree(decor,-4.1+k*1.35,-3.3,2.4+(k%3)*.4,'#6f8973','forest');
   for(let k=0;k<24;k++)leaf(decor,Math.sin(k*7.3)*4.2,.2,Math.cos(k*4.1)*3.1,.18,k%2?'#ae926d':'#b8a179');
   const log=mesh(new THREE.CylinderGeometry(.3,.34,1.8,7),'#93755a',decor,4,.4,-.4);log.rotation.x=Math.PI/2;
   for(let k=0;k<5;k++)stone(-4.2+k*.18,.3+k*.35,.38,'#78947a');
@@ -482,6 +534,157 @@ for(const [key,root] of Object.entries(gatherWorlds)){
   for(const x of [-3,2.7])box(decor,'#aa8657',x,.18,0,1.5,.14,6,.05);
   box(decor,'#bd8b6d',0,.85,-3.1,1.3,1.4,.9,.03);const roof=mesh(new THREE.ConeGeometry(1.03,.7,4),'#8d7972',decor,0,1.88,-3.1);roof.rotation.y=Math.PI/4;
   for(let k=0;k<3;k++)box(decor,'#e2c17b',4,.45,-2+k*1.15,.7,.6,.8,.04);rail(3.5,'#b89769');
+ }
+}
+// 5.6 layered miniature dioramas: every location has foreground props,
+// side silhouettes and a recognisable landmark, not just a changed floor colour.
+function miniBloom(parent,x,z,col='#f5c2cc',size=1){
+ const g=group(parent,x,.19,z);g.scale.setScalar(size);
+ mesh(new THREE.CylinderGeometry(.025,.04,.55,7),'#8db68b',g,0,.25,0);
+ for(let k=0;k<6;k++){const a=k*Math.PI/3;ball(g,col,Math.cos(a)*.17,.55+Math.sin(a)*.17,0,.13,.14,.09);}
+ ball(g,'#f6d28a',0,.55,.10,.105,.105,.06);return g;
+}
+function miniCrate(parent,x,z){const g=group(parent,x,.18,z);box(g,'#d8ae80',0,.27,0,.85,.48,.72,.055);
+ for(let k=0;k<3;k++)box(g,'#f1d2a3',0,.14+k*.16,.37,.82,.055,.06,.01);
+ for(let k=0;k<4;k++)ball(g,['#e7a0a0','#e7ca81','#a4c6a1'][k%3],(k%2-.5)*.33,.57,Math.floor(k/2)*.25-.12,.15,.15,.15);
+ return g;}
+function miniLantern(parent,x,z){const g=group(parent,x,.2,z);box(g,'#b69a7b',0,1.10,0,.08,2.2,.08,.02);
+ box(g,'#d7aa89',0,2.1,0,.48,.08,.42,.02);ball(g,'#fff0c4',0,1.79,0,.24,.31,.23);return g;}
+function miniArch(parent){const g=group(parent,0,.18,-3.10);
+ for(const x of [-1.55,1.55]){box(g,'#f3e4ca',x,1.35,0,.17,2.7,.17,.045);for(let k=0;k<5;k++)miniBloom(g,x+(x>0?.2:-.2),-.12+k*.07,'#f2b5c5',.5);}
+ box(g,'#f3e4ca',0,2.65,0,3.25,.16,.18,.04);return g;}
+for(const [key,root] of Object.entries(gatherWorlds)){
+ const area=+key,art=group(root);
+ // Dense side-border flowerbeds, intentionally leaving a wide playable aisle.
+ for(let k=0;k<30;k++){
+  const side=k%2?-1:1,x=side*(3.65+(k%3)*.18),z=-3.0+((k*11)%29)/29*6;
+  ball(art,k%4===0?'#9ebc8e':'#b9d3a3',x,.29,z,.23,.22,.23);
+  if(k%2===0)miniBloom(art,x+(side>0?-.16:.16),z,['#f4c1c9','#fff1cf','#d7c5e5'][k%3],.60+(k%3)*.12);
+ }
+ for(let k=0;k<12;k++){
+  const x=-3.2+(k%6)*1.28,z=k<6?-3.45:3.48;
+  ball(art,k%2?'#f7e7d4':'#e8d0d3',x,.20,z,.19,.075,.14);
+ }
+ if(area===1){miniArch(art);miniCrate(art,-3.7,-2.4);miniCrate(art,3.7,2.3);
+  for(let k=0;k<6;k++)miniBloom(art,-2.8+k*.93,3.05,'#efb2c3',1.05);}
+ if(area===7){for(let k=0;k<9;k++){const z=-3+k*.75;ball(art,'#8ab9bf',-3.5,.23,z,.55,.045,.45);}
+  for(let k=0;k<4;k++){miniLantern(art,3.7,-2.8+k*1.75);miniBloom(art,2.9,-2.5+k*1.6,'#d3bde0',1.2);}}
+ if(area===2){for(let k=0;k<5;k++){const x=-3.5+k*1.7;const t=lowTree(art,x,-3.0,2.25,'#98bf82','orchard');
+  for(let j=0;j<4;j++){const a=j*1.57;ball(t,'#e88882',Math.cos(a)*.38,1.70+(j%2)*.3,Math.sin(a)*.3,.16,.16,.16);}}
+  miniCrate(art,3.6,2.7);miniCrate(art,-3.6,2.7);}
+ if(area===8){for(let k=0;k<4;k++){miniLantern(art,k%2?3.9:-3.9,-2.8+k*1.8);miniCrate(art,k%2?3.3:-3.3,-1.9+k*1.3);}
+  for(let k=0;k<8;k++)miniBloom(art,-3.5+k,3.0,'#f2d5b0',.75);}
+ if(area===3){for(let k=0;k<9;k++){const x=-3.8+k*.95;const t=lowTree(art,x,-3.35,2.8,'#789b80','forest');
+  ball(t,'#c5d3a5',-.2,2.1,.24,.3,.24,.27);}
+  for(let k=0;k<13;k++){const x=(k%2?3.5:-3.5),z=-2.8+k*.45;const m=group(art,x,.16,z);
+   mesh(new THREE.CylinderGeometry(.08,.12,.28,8),'#f6ead5',m,0,.17,0);ball(m,'#e6a8b1',0,.36,0,.22,.12,.22);}}
+ if(area===9){for(let k=0;k<5;k++){miniLantern(art,k%2?3.7:-3.7,-2.6+k*1.3);}
+  for(let k=0;k<24;k++)miniBloom(art,-3.2+(k%8)*.90,-3+(Math.floor(k/8))*2.9,['#f6c9df','#f7e6b7','#d7c9ed'][k%3],.72);}
+ if(area===6){for(let k=0;k<5;k++){miniCrate(art,k%2?3.6:-3.6,-2.6+k*1.25);}
+  for(let k=0;k<12;k++)miniBloom(art,-3.4+(k%6)*1.35,k<6?-3.1:3.2,'#f3d3a1',.7);}
+ if(area===10){for(let k=0;k<10;k++){const x=-3.6+(k%5)*1.8,z=k<5?-3.0:3.0;
+  for(let j=0;j<4;j++){const q=mesh(new THREE.CylinderGeometry(.02,.025,.8,6),'#b6a76a',art,x+(j-1.5)*.13,.59,z);
+   ball(art,'#edcf8a',x+(j-1.5)*.13,1.04,z,.08,.19,.08);}}
+  miniCrate(art,3.7,2.4);miniCrate(art,-3.7,-2.4);}
+}
+// 5.8: location-specific miniature set dressing. No generic prop blanket is shared.
+// All pieces stay inside their own world group, so travel does not leak decorations.
+function tinySign(root,x,z,words,base='#e5bc91'){
+ const g=group(root,x,.18,z);box(g,'#b38b6b',0,.61,0,.10,1.15,.11,.02);
+ box(g,base,0,1.24,0,1.13,.53,.13,.09);
+ const face=panel(g,0,1.24,.075,1.02,.42,ink(words,512,256,'#fff5e5','#a9786c'));
+ return g;
+}
+function tinyPond(root,x,z){
+ const g=group(root,x,.18,z);
+ const water=ball(g,'#a7d1d0',0,.04,0,.85,.07,.55);
+ for(let j=0;j<7;j++){const a=j*Math.PI*2/7;ball(g,'#e9e2ce',Math.cos(a)*.79,.05,Math.sin(a)*.53,.17,.10,.14);}
+ for(let j=0;j<3;j++){const a=j*2.3;ball(g,'#9dbf9d',Math.sin(a)*.44,.10,Math.cos(a)*.28,.17,.025,.15);}
+}
+function tinyBee(root,x,z){const g=group(root,x,.85,z);ball(g,'#f5d48a',0,0,0,.18,.14,.15);
+ for(const dx of [-.07,.07])ball(g,'#fff7e9',dx,.14,-.02,.12,.15,.055);
+ for(const dx of [-.07,.07])ball(g,'#79634f',dx,-.02,.14,.022,.025,.015);return g;}
+function tinyWheelbarrow(root,x,z){const g=group(root,x,.18,z);g.rotation.y=.3;
+ box(g,'#c78f77',0,.47,0,1.06,.28,.65,.08);
+ for(const zz of [-.30,.30])box(g,'#b78e69',-.40,.24,zz,.10,.46,.10,.02);
+ mesh(new THREE.CylinderGeometry(.19,.19,.11,12),'#817b70',g,.53,.24,0).rotation.x=Math.PI/2;
+ for(let j=0;j<5;j++)ball(g,'#8eb48b',(j%3-1)*.25,.70,Math.floor(j/3)*.26-.10,.19,.18,.17);
+}
+function tinyWell(root,x,z){const g=group(root,x,.18,z);
+ mesh(new THREE.CylinderGeometry(.60,.64,.65,12),'#c6b1a0',g,0,.34,0);
+ mesh(new THREE.CylinderGeometry(.46,.46,.015,16),'#86b5bd',g,0,.68,0);
+ for(const dx of [-.56,.56])box(g,'#b98e72',dx,1.25,0,.13,1.45,.13,.02);
+ const roof=mesh(new THREE.ConeGeometry(.94,.65,4),'#d6a4a1',g,0,2.10,0);roof.rotation.y=Math.PI/4;
+}
+function tinyHay(root,x,z){const g=group(root,x,.17,z);
+ for(let j=0;j<3;j++)box(g,j%2?'#f1d492':'#e4bd77',(j-1)*.35,.30+(j%2)*.17,0,.60,.52,.52,.09);
+ for(let j=0;j<5;j++)box(g,'#c8a46b',(j-2)*.13,.62,.28,.035,.32,.03,.01);
+}
+function tinyPergola(root,x,z){const g=group(root,x,.18,z);
+ for(const dx of [-.8,.8])for(const dz of [-.5,.5])box(g,'#c6a489',dx,1.04,dz,.13,2.05,.13,.02);
+ for(let j=0;j<6;j++)box(g,'#f0d8b8',-.72+j*.29,2.13,0,.10,.11,1.45,.02);
+ for(let j=0;j<7;j++){const a=j*2.4;ball(g,'#eab5c7',Math.sin(a)*.75,2.12,Math.cos(a)*.45,.15,.11,.14);}
+}
+for(const [key,root] of Object.entries(gatherWorlds)){
+ const n=+key,detail=group(root);
+ if(n===1){ // Rose-covered cottage garden: clipped hedges, arch, butterfly houses.
+  tinySign(detail,2.85,-3.03,'Berry\nGarden','#eeb9b5');
+  for(let j=0;j<8;j++){const z=-2.9+j*.82;ball(detail,'#a7c7a0',-4.05,.39,z,.35,.35,.31);
+   if(j%2===0)ball(detail,'#f3b8c4',-4.05,.72,z,.16,.13,.16);}
+  for(const x of [-2.9,2.95]){box(detail,'#f3d4ba',x,.64,3.20,.55,.85,.48,.10);box(detail,'#e8aab5',x,1.13,3.2,.68,.15,.58,.05);}
+  for(let j=0;j<5;j++)tinyBee(detail,2.1+j*.28,-2.2+(j%2)*.38);
+ }else if(n===7){ // Stream path: reeds, lily pond, bridge, water wheel.
+  tinyPond(detail,2.65,-2.6);tinySign(detail,2.9,3.1,'Creek\nTrail','#bed7d3');
+  for(let j=0;j<15;j++){const z=-3.0+j*.44;const x=-3.9+(j%3)*.13;
+   const reed=mesh(new THREE.CylinderGeometry(.025,.035,.75+(j%3)*.25,5),'#82a88c',detail,x,.60,z);
+   ball(detail,'#c2a785',x,1.0+(j%3)*.13,z,.065,.16,.065);}
+  for(let j=0;j<6;j++){box(detail,'#d8b997',2.9,.27,-1.1+j*.30,1.25,.12,.19,.03);}
+ }else if(n===2){ // Orchard: uniform apple trees, ladders, baskets, fruit stalls.
+  tinySign(detail,3.05,-3.10,'Apple\nOrchard','#edc79e');
+  const ladder=group(detail,-3.1,.18,-2.1);for(const dx of [-.3,.3]){const side=box(ladder,'#c89d73',dx,.92,0,.10,1.82,.10,.02);side.rotation.z=dx*.17;}
+  for(let j=0;j<5;j++)box(ladder,'#e7c49a',0,.35+j*.32,0,.70,.075,.10,.02);
+  for(let j=0;j<4;j++){const x=2.2+j*.50;box(detail,'#d4a575',x,.35,3.10,.40,.35,.46,.05);
+   for(let k=0;k<3;k++)ball(detail,'#e88e85',x+(k-1)*.11,.58,3.1,.10,.11,.10);}
+ }else if(n===8){ // Warm-stone courtyard: flowering ornamental trees, ceramics, fountain.
+  tinyWell(detail,0,-3.0);tinySign(detail,3.0,3.08,'Stone\nCourt','#e3c6b6');
+  for(let j=0;j<7;j++){const x=-3.5+j*1.12;mesh(new THREE.CylinderGeometry(.27,.31,.34,10),'#d7b69d',detail,x,.36,3.15);
+   ball(detail,j%2?'#d7c1a8':'#c8baa8',x,.64,3.15,.27,.29,.26);}
+  for(const x of [-3.7,3.7]){box(detail,'#dfc8b6',x,.35,.1,.52,.54,1.25,.08);
+   for(let j=0;j<3;j++)ball(detail,'#f2d6cb',x,.72,-.32+j*.32,.15,.12,.15);}
+ }else if(n===3){ // Moss forest: tiered conifers, stumps, fungi, fern clusters.
+  tinySign(detail,2.85,3.03,'Moss\nForest','#b7c6a6');
+  for(let j=0;j<16;j++){const z=-3.0+j*.39,x=j%2?3.90:-3.90;
+   for(let k=0;k<3;k++){const frond=ball(detail,k%2?'#769c7d':'#91b18d',x+(k-1)*.16,.37,z,.10,.34,.23);frond.rotation.z=(k-1)*.43;}}
+  for(let j=0;j<5;j++){const x=-3.5+j*1.7;
+   mesh(new THREE.CylinderGeometry(.26,.34,.38,8),'#9a795d',detail,x,.37,3.22);
+   ball(detail,'#e7d4b4',x,.58,3.22,.21,.03,.21);}
+  for(let j=0;j<9;j++){const x=3.45+(j%3)*.16,z=-2.4+Math.floor(j/3)*.7;
+   ball(detail,j%2?'#e3a2b1':'#d2b4cb',x,.35,z,.18,.12,.18);}
+ }else if(n===9){ // Wind-chime flower valley: tall pastel blooms, ribbons, gazebo.
+  tinyPergola(detail,0,-2.9);tinySign(detail,2.95,3.08,'Flower\nValley','#e9c8db');
+  for(let j=0;j<12;j++){const x=j%2?3.85:-3.85,z=-2.9+j*.53;
+   mesh(new THREE.CylinderGeometry(.024,.03,1.0,5),'#96ad8c',detail,x,.70,z);
+   for(let k=0;k<4;k++)ball(detail,k%2?'#d5b9e2':'#f4d7a7',x+Math.sin(k*1.57)*.14,1.17+Math.cos(k*1.57)*.14,z,.11,.12,.10);}
+  for(let j=0;j<6;j++){const x=-2.8+j*1.10;const ch=mesh(new THREE.CylinderGeometry(.045,.045,.42,8),'#d9bd85',detail,x,1.95,2.9);}
+ }else if(n===6){ // Vegetable plot: individual rows, greenhouse, cart, watering cans.
+  tinyWheelbarrow(detail,3.55,2.35);tinySign(detail,-2.9,-3.05,'Veggie\nPatch','#d9bb9c');
+  const greenhouse=group(detail,3.45,.18,-2.75);
+  box(greenhouse,'#d4c3a9',0,.78,0,1.45,1.40,1.1,.05);
+  const roof=mesh(new THREE.ConeGeometry(1.10,.78,4),'#d7e3ce',greenhouse,0,1.88,0);roof.rotation.y=Math.PI/4;
+  for(let j=0;j<5;j++){const z=-2.5+j*1.05;
+   for(let k=0;k<4;k++){const x=-3.7+k*.26;ball(detail,'#83ad79',x,.36,z,.18,.20,.19);
+    if(j%2===0)ball(detail,'#e8a477',x,.54,z,.085,.09,.09);}}
+ }else if(n===10){ // Wheat farm: windmill, hay bales, scarecrow, wheat borders.
+  tinyHay(detail,-3.6,2.85);tinyHay(detail,3.55,-2.55);tinySign(detail,2.9,3.05,'Golden\nFarm','#e5cd9b');
+  const mill=group(detail,-3.65,.18,-2.75);
+  mesh(new THREE.CylinderGeometry(.30,.49,2.0,8),'#f1dbaf',mill,0,1.05,0);
+  const cap=mesh(new THREE.ConeGeometry(.60,.52,8),'#c48f76',mill,0,2.30,0);
+  for(let j=0;j<4;j++){const blade=box(mill,'#fff1d5',Math.sin(j*Math.PI/2)*.52,1.63+Math.cos(j*Math.PI/2)*.52,.52,.20,.90,.08,.02);blade.rotation.z=-j*Math.PI/2;}
+  const scare=group(detail,3.55,.18,.05);box(scare,'#b18e68',0,.9,0,.10,1.8,.1,.02);
+  box(scare,'#d7a88b',0,1.30,0,1.10,.12,.12,.02);ball(scare,'#e7c58c',0,1.65,0,.30,.31,.27);
+  mesh(new THREE.ConeGeometry(.49,.32,10),'#b68b6d',scare,0,1.99,0);
+  for(let j=0;j<14;j++){const x=j%2?4.08:-4.08,z=-3.1+j*.47;
+   ball(detail,'#e9c87f',x,.64,z,.095,.32,.09);}
  }
 }
 function nearestIngredient(){
@@ -576,6 +779,10 @@ const cookUI=document.createElement('div');cookUI.id='cook-ui';
 cookUI.innerHTML=`<div id="recipe-choose" class="cook-card"><div class="cook-title">今天做什么？</div><div class="cook-choice"><button type="button" data-recipe="pudding">🍮<span>动物布丁</span></button><button type="button" data-recipe="pizza">🍕<span>披萨</span></button><button type="button" data-recipe="cake">🍓<span>草莓甜品</span></button></div></div><div id="cook-work" hidden><div id="cook-palette" aria-label="食材选择"></div><div class="cook-actions"><span id="cook-count">点击配料，再点食物装饰</span><button id="cook-finish" type="button">✨ 完成制作</button></div></div>`;
 document.body.appendChild(cookUI);
 const cookChoice=cookUI.querySelector('#recipe-choose');
+const choiceFeedback=document.createElement('div');choiceFeedback.id='choice-feedback';
+choiceFeedback.innerHTML='<div id="choice-preview">🍮</div><div id="choice-message">选择你想制作的料理</div><button id="choice-start" type="button" hidden>🌿 开始准备食材</button><button id="choice-change" type="button" hidden>↩ 换一个食谱</button>';
+cookChoice.appendChild(choiceFeedback);
+
 const cookWork=cookUI.querySelector('#cook-work');
 const cookPalette=cookUI.querySelector('#cook-palette');
 const cookFinish=cookUI.querySelector('#cook-finish');
@@ -585,7 +792,17 @@ function showCookingUI(){
 }
 function chooseRecipe(type){
  desiredRecipe=type;
- if(!hasIngredients(type)){recipe=null;updateHUD();$('#hint').textContent='食谱已选好！点击上方场景去采集 🌿';return;}
+ if(!hasIngredients(type)){
+  recipe=null;updateHUD();
+  const missing=Object.entries(recipes[type].need).map(([id,n])=>`${ingredientCatalog[id][0]} ${ingredientCatalog[id][1]} ${pantry[id]}/${n}`).join(' · ');
+  cookChoice.querySelectorAll('[data-recipe]').forEach(b=>b.classList.toggle('selected',b.dataset.recipe===type));
+  cookChoice.querySelector('#choice-preview').textContent=type==='pizza'?'🍕':type==='cake'?'🍓':'🍮';
+  cookChoice.querySelector('#choice-message').innerHTML=`<strong>${recipes[type].name}</strong><br>还需要：${missing}<br>选择一个地点去采集吧！`;
+  cookChoice.querySelector('#choice-start').hidden=false;
+  cookChoice.querySelector('#choice-change').hidden=false;
+  $('#hint').textContent='已选好食谱！点击「开始准备食材」';
+  playSFX('choose');return;
+ }
  recipe=type;selectedTopping=null;placedCount=0;updateHUD();
  pudding.visible=type!=='pizza';pizza.visible=type==='pizza';
  toppings.clear();cookPalette.replaceChildren();
@@ -603,6 +820,13 @@ function chooseRecipe(type){
  $('#hint').textContent='选择配料，点击食物自由装饰';
 }
 cookChoice.querySelectorAll('[data-recipe]').forEach(btn=>btn.addEventListener('click',()=>chooseRecipe(btn.dataset.recipe)));
+cookChoice.querySelector('#choice-start').addEventListener('click',()=>travel(1));
+cookChoice.querySelector('#choice-change').addEventListener('click',()=>{
+ desiredRecipe=null;cookChoice.querySelectorAll('[data-recipe]').forEach(b=>b.classList.remove('selected'));
+ cookChoice.querySelector('#choice-message').textContent='选择你想制作的料理';
+ cookChoice.querySelector('#choice-preview').textContent='🍮';
+ cookChoice.querySelector('#choice-start').hidden=true;cookChoice.querySelector('#choice-change').hidden=true;updateHUD();
+});
 function addTopping(x,z){
  if(!selectedTopping||!recipe||won)return;
  const id=selectedTopping.id;
@@ -611,8 +835,7 @@ function addTopping(x,z){
  const g=group(toppings,x,recipe==='pudding'?1.02:.31,z);
  const c=selectedTopping.color;
  if(id==='strawberry'){
-  const b=mesh(new THREE.ConeGeometry(.16,.28,8),c,g,0,.10,0);b.rotation.z=Math.PI;
-  ball(g,'#89b887',0,.26,0,.11,.04,.10);
+  const b=collectibleModel(g,'strawberry');b.scale.setScalar(.60);b.position.y=-.10;
  }else if(id==='cherry'){
   ball(g,c,0,.11,0,.15,.15,.15);
   const stem=mesh(new THREE.CylinderGeometry(.018,.018,.19,5),'#83aa78',g,.04,.28,0);stem.rotation.z=.32;
@@ -687,8 +910,27 @@ const nav=document.createElement('nav');nav.id='world-nav';nav.setAttribute('ari
 nav.innerHTML=[4,1,7,2,8,3,9,6,10,5].map(n=>`<button type="button" data-world="${n}">${worldNames[n]}</button>`).join('');
 document.body.appendChild(nav);
 const recipeCard=document.createElement('section');recipeCard.id='recipe-card';
-recipeCard.innerHTML='<div class="recipe-head">🍮 今日食谱</div><div id="recipe-detail"></div><div id="pantry-count"></div>';
+recipeCard.innerHTML='<div class="recipe-head">🍮 今日食谱</div><div id="recipe-detail"></div><div id="pantry-count"></div><div id="bag-location" hidden></div>';
 document.body.appendChild(recipeCard);
+recipeCard.addEventListener('click',e=>{
+ const item=e.target.closest('[data-ingredient]');
+ if(item){showIngredientLocation(item.dataset.ingredient);return;}
+ if(e.target.id==='bag-expand'){bagExpanded=!bagExpanded;updateHUD();return;}
+ if(e.target.id==='bag-go'){const destination=Number(e.target.dataset.destination);travel(destination);return;}
+});
+let selectedIngredient=null;
+function showIngredientLocation(id){
+ if(!ingredientCatalog[id])return;
+ selectedIngredient=id;
+ const destination=ingredientCatalog[id][2];
+ const label=ingredientCatalog[id][1];
+ const steps=harvestProfiles[id].join(' → ');
+ const card=recipeCard.querySelector('#bag-location');
+ card.hidden=false;
+ card.innerHTML=`<strong>${label}</strong><span>📍 ${worldNames[destination]}</span><small>${steps}</small><button type="button" id="bag-go" data-destination="${destination}">前往${worldNames[destination]} ↗</button>`;
+ nav.querySelectorAll('[data-world]').forEach(b=>b.classList.toggle('bag-target',+b.dataset.world===destination));
+}
+
 const curtain=document.createElement('div');curtain.id='scene-curtain';document.body.appendChild(curtain);
 function hasIngredients(type){return Object.entries(recipes[type].need).every(([k,n])=>pantry[k]>=n);}
 function recipeNeeds(){
@@ -701,16 +943,17 @@ function updateHUD(){
  $('#instructions').innerHTML=level===4?'点击食谱选择 · 点击食物装饰':level===5?'欣赏你的作品':'WASD / 方向键移动 · 靠近后按 E 或点击 · 按提示分步采集';
  $('#collect').textContent='互动 E';
  recipeCard.querySelector('#recipe-detail').innerHTML=recipeNeeds();
- recipeCard.querySelector('#pantry-count').innerHTML=`背包 · 15种食材<br>${Object.entries(ingredientCatalog).map(([k,v])=>`${v[0]}${pantry[k]}`).join('  ')}`;
+ recipeCard.querySelector('#pantry-count').innerHTML=bagMarkup();
+ if(selectedIngredient)showIngredientLocation(selectedIngredient);
  nav.querySelectorAll('[data-world]').forEach(b=>b.classList.toggle('active',+b.dataset.world===level));
 }
 function clearFX(){pickupFX.splice(0).forEach(f=>{f.particles.forEach(p=>scene.remove(p.m));scene.remove(f.flying);});}
 const boxContents=scene.children.filter(o=>!boxShell.has(o));
 // These are scene children, not the box shell or lid. Hide all while the lid moves.
-function hideContents(){for(const o of boxContents)o.visible=false;}
+function hideContents(){for(const o of boxContents)o.visible=false;picnicArt.visible=false;}
 function revealContents(){
  for(const o of boxContents)o.visible=level===5;
- dog.visible=level!==4;picnic.visible=level===5;kitchen.visible=level===4;
+ dog.visible=level!==4;picnic.visible=level===5;picnicArt.visible=level===5;kitchen.visible=level===4;
  berries.forEach(b=>b.mesh.visible=false);orchard.visible=false;forest.visible=false;
  for(const [n,g] of Object.entries(gatherWorlds)){g.visible=Number(n)===level;for(const item of gatherItems.filter(i=>i.area===+n)){item.g.visible=true;item.model.visible=!item.taken;}}
  served.visible=level===5;confetti.visible=level===5&&!!finishedRecipe;
@@ -722,11 +965,10 @@ function enterLevel(n){
  cookUI.hidden=true;$('#finish').hidden=true;
  revealContents();updateHUD();
  if(n===4&&desiredRecipe&&!recipe&&hasIngredients(desiredRecipe))chooseRecipe(desiredRecipe);
- if(n===5){$('#hint').textContent=finishedRecipe?`你的${recipes[finishedRecipe].name}完成啦！✨`:'先去厨房制作一份美食吧 🍮';}
+ if(n===5){$('#hint').textContent=finishedRecipe?`你的${recipes[finishedRecipe].name}完成啦！✨`:'自由野餐 · 可以先探索，做好料理再带过来';}
 }
 function travel(n){
  if(![1,2,3,4,5,6,7,8,9,10].includes(n)||transition!=='play'||n===level)return;
- if(n===5&&!finishedRecipe){$('#hint').textContent='先做一份美食，再去野餐吧';return;}
  if(harvestBusy){notifyHarvest('请等当前采集动作完成');return;}
  clearFX();pendingLevel=n;transition='fadeout';transitionAge=0;keys.clear();cookUI.hidden=true;
  curtain.classList.add('on');
@@ -747,7 +989,7 @@ function reset(){
 }
 function completeLevel(){
  won=true;partyTime=0;keys.clear();
- if(level===4){$('#hint').textContent='料理完成！去野餐草地看看吧 🧺';setTimeout(()=>{if(level===4&&won){won=false;travel(5);}},1100);}
+ if(level===4){$('#hint').textContent='料理完成！去野餐草地看看吧 🧺';setTimeout(()=>{if(level===4&&won){won=false;travel(5);}},480);}
 }
 function collect(target=nearest){
  if(level!==1||transition!=='play'||opening<2.3||!target||target.taken||Math.hypot(dog.position.x-target.x,dog.position.z-target.z)>1.35)return;
@@ -807,16 +1049,16 @@ function tick(){
  // while every prop is hidden. Reveal complete props only after the lid opens.
  if(transition==='fadeout'){
    transitionAge+=dt;
-   if(transitionAge>=.42){hideContents();transition='closing';transitionAge=0;}
+   if(transitionAge>=.09){hideContents();transition='closing';transitionAge=0;}
  }else if(transition==='closing'){
-   opening=Math.max(0,opening-dt*1.65);
+   opening=Math.max(0,opening-dt*13);
    if(opening===0){level=pendingLevel;pendingLevel=null;transition='opening';transitionAge=0;enterLevel(level);hideContents();}
  }else if(transition==='opening'){
-   opening=Math.min(2.3,opening+dt*1.45);
+   opening=Math.min(2.3,opening+dt*12);
    if(opening>=2.3){transition='fadein';transitionAge=0;revealContents();curtain.classList.remove('on');}
  }else if(transition==='fadein'){
    transitionAge+=dt;
-   if(transitionAge>.45)transition='play';
+   if(transitionAge>.08)transition='play';
  }
  const p=THREE.MathUtils.clamp(opening/2.3,0,1);
  lid.rotation.x=-1.95*(1-Math.pow(1-p,3));
@@ -841,7 +1083,7 @@ function tick(){
    $('#hint').textContent=Date.now()<harvestNoticeUntil?harvestNotice:target?`${ingredientCatalog[target.id][1]} · E / 点击：${label}`:'自由探索 · 采下的食材会消失 30 秒，植株会保留';
  }else if(transition!=='play')$('#hint').textContent='正在切换小世界…';
  else if(level===4)$('#hint').textContent='选择食谱，准备材料，再自由装饰';
- else if(level===5)$('#hint').textContent='享受你的野餐时光';
+ else if(level===5)$('#hint').textContent=finishedRecipe?'享受你的野餐时光':'自由野餐 · 也可以先去厨房做点心';
  tail.rotation.z=Math.sin(elapsed*9)*.3;ears.forEach((e,i)=>e.rotation.x=Math.sin(elapsed*4+i)*.05);
  for(let i=pickupFX.length-1;i>=0;i--){const f=pickupFX[i];f.age+=dt;const t=f.age;
    f.flying.position.set(THREE.MathUtils.lerp(f.x,3.55,Math.min(t,1)),.55+Math.sin(Math.min(t,1)*Math.PI)*1.45,THREE.MathUtils.lerp(f.z,3,Math.min(t,1)));
@@ -871,9 +1113,119 @@ function tick(){
    confetti.children.forEach((m,i)=>{const d=m.userData;m.position.set(d.x+Math.sin(elapsed+i)*.2,5-((partyTime*d.speed+i*.07)%5),d.z);m.rotation.set(elapsed+i,elapsed*2,elapsed*.7);});
    
  }
- showCookingUI();controls.update();renderer.render(scene,camera);
+ showCookingUI();
+ // Kitchen becomes a close, player-facing decorating view. OrbitControls stays
+ // enabled so mouse/touch can still rotate the food while placing toppings.
+ const wantsClose=level===4&&transition==='play'&&!!recipe&&!won;
+ cookingViewMix=THREE.MathUtils.damp(cookingViewMix,wantsClose?1:0,5.5,dt);
+ const home=cameraHome.clone().multiplyScalar(innerWidth<650?1.35:1);
+ const destination=home.lerp(cameraKitchen,cookingViewMix);
+ const aim=cameraHomeTarget.clone().lerp(cameraKitchenTarget,cookingViewMix);
+ if(cookingViewMix>.005&&cookingViewMix<.995){camera.position.lerp(destination,Math.min(1,dt*5));controls.target.lerp(aim,Math.min(1,dt*5));}
+ else if(wantsClose&&camera.position.distanceTo(cameraKitchen)>.06){camera.position.lerp(cameraKitchen,Math.min(1,dt*5));controls.target.lerp(cameraKitchenTarget,Math.min(1,dt*5));}
+ else if(!wantsClose&&controls.target.distanceTo(cameraHomeTarget)>.06){camera.position.lerp(home,Math.min(1,dt*5));controls.target.lerp(cameraHomeTarget,Math.min(1,dt*5));}
+ controls.minDistance=wantsClose?5.5:13;
+ controls.update();renderer.render(scene,camera);
 }
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+
+// Original soft music generated in Web Audio: no downloaded assets or copyright samples.
+let audioContext=null,musicTimer=null,musicOn=false,musicStep=0,musicMaster=null;
+let musicVolume=.9;
+const musicButton=document.createElement('button');musicButton.id='music-toggle';musicButton.type='button';
+musicButton.textContent='♫ 开启音乐';musicButton.setAttribute('aria-label','开启或关闭背景音乐');document.body.appendChild(musicButton);
+function tone(freq,duration=.24,volume=.028,shape='sine',delay=0){
+ if(!audioContext||audioContext.state!=='running')return;
+ const t=audioContext.currentTime+delay,o=audioContext.createOscillator(),gain=audioContext.createGain();
+ o.type=shape;o.frequency.setValueAtTime(freq,t);
+ gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(volume,t+.015);
+ gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
+ o.connect(gain);gain.connect(musicMaster||audioContext.destination);o.start(t);o.stop(t+duration+.02);
+}
+function playSFX(type){if(!audioContext||audioContext.state!=='running')return;
+ if(type==='choose'){tone(523,.14,.045);tone(659,.17,.045,'sine',.11);tone(784,.24,.04,'sine',.22);}
+ if(type==='pick'){tone(784,.12,.03);tone(1046,.18,.03,'sine',.09);}
+}
+const melody=[0,2,4,7,4,2,0,null,2,4,5,9,7,4,2,null,0,4,7,9,7,4,2,null,4,2,0,2,4,7,4,null];
+const chords=[261.63,220,174.61,196];
+function musicBeat(){if(!musicOn)return;
+ const step=musicStep++,note=melody[step%melody.length],base=chords[Math.floor(step/8)%4];
+ if(note!==null)tone(523.25*Math.pow(2,note/12),.30,.105,'sine');
+ if(step%4===0){tone(base,.78,.070,'triangle');tone(base*1.5,.70,.052,'sine',.07);}
+}
+const volumeSlider=document.createElement('input');volumeSlider.type='range';volumeSlider.id='music-volume';volumeSlider.min='0';volumeSlider.max='100';volumeSlider.value='90';volumeSlider.setAttribute('aria-label','背景音乐音量');document.body.appendChild(volumeSlider);
+const volumeLabel=document.createElement('label');volumeLabel.id='music-volume-label';volumeLabel.htmlFor='music-volume';volumeLabel.textContent='音乐音量';document.body.appendChild(volumeLabel);
+volumeSlider.addEventListener('input',()=>{musicVolume=Number(volumeSlider.value)/100;if(musicMaster)musicMaster.gain.setTargetAtTime(musicVolume,audioContext.currentTime,.04);});
+musicButton.addEventListener('click',async()=>{
+ try{if(!audioContext)audioContext=new (window.AudioContext||window.webkitAudioContext)();await audioContext.resume();
+ if(!musicMaster){musicMaster=audioContext.createGain();musicMaster.gain.value=musicVolume;musicMaster.connect(audioContext.destination);}
+ musicOn=!musicOn;musicButton.textContent=musicOn?'♫ 音乐开启 · 点击静音':'♫ 开启音乐';
+ if(musicTimer)clearInterval(musicTimer);musicTimer=null;
+ if(musicOn){musicBeat();musicTimer=setInterval(musicBeat,315);}
+ }catch(err){musicButton.textContent='当前浏览器不支持音乐';}
+});
+
+
+// 5.7: Rich picnic vignette and tabletop atelier — permanent, non-interactive
+// scenery; stage groups keep all props hidden while the toy-box lid moves.
+const picnicArt=group(scene);picnicArt.visible=false;
+function tinyDaisy(root,x,y,z,shade='#fff8e7',scale=1){
+ const flower=group(root,x,y,z);flower.scale.setScalar(scale);
+ for(let j=0;j<7;j++){const a=j*Math.PI*2/7;ball(flower,shade,Math.cos(a)*.12,Math.sin(a)*.12,0,.11,.11,.055);}
+ ball(flower,'#e9c77b',0,0,.06,.10,.10,.05);return flower;
+}
+function picket(root,x,z,angle=0){const g=group(root,x,.14,z);g.rotation.y=angle;
+ for(let k=0;k<5;k++){box(g,'#fff3df',(k-2)*.20,.39,0,.15,.67,.10,.035);mesh(new THREE.ConeGeometry(.105,.18,4),'#fff3df',g,(k-2)*.20,.81,0).rotation.y=Math.PI/4;}
+ box(g,'#e4c4a4',0,.35,.06,1.03,.075,.07,.02);return g;
+}
+function lowBush(root,x,z,tint='#a4c89c',scale=1){const g=group(root,x,.18,z);g.scale.setScalar(scale);
+ for(let j=0;j<5;j++){const a=j*Math.PI*2/5;ball(g,j%2?tint:'#b7d5a8',Math.cos(a)*.23,.24+(j%2)*.13,Math.sin(a)*.23,.31,.28,.29);}
+ return g;
+}
+function plushStool(root,x,z){const g=group(root,x,.17,z);
+ for(const dx of [-.27,.27])for(const dz of [-.25,.25])box(g,'#b88c73',dx,.30,dz,.12,.56,.12,.03);
+ box(g,'#f1bfc1',0,.62,0,.78,.17,.70,.10);return g;
+}
+function tinyPicnicBlanket(root,x,z){const g=group(root,x,.19,z);box(g,'#f7d5d6',0,.035,0,1.55,.07,1.35,.035);
+ for(let a=-2;a<=2;a++)for(let b=-2;b<=2;b++)if((a+b)%2===0)box(g,'#fff5e7',a*.28,.074,b*.24,.26,.008,.22,.005);
+ return g;
+}
+for(let i=0;i<22;i++){
+ const side=i%2?-1:1,z=-3.25+(i*7%23)/23*6.3;
+ lowBush(picnicArt,side*(3.2+(i%3)*.22),z,['#a7c99a','#bed6ad','#94ba9a'][i%3],.72+(i%3)*.12);
+ if(i%2===0)tinyDaisy(picnicArt,side*3.2,.60,z,'#fff4e8',.8);
+}
+for(let i=0;i<6;i++){picket(picnicArt,-3.45,-2.7+i*.98,Math.PI/2);picket(picnicArt,3.45,-2.7+i*.98,Math.PI/2);}
+for(let i=0;i<6;i++){
+ const a=i*Math.PI*2/6;const x=2.6*Math.cos(a),z=2.35*Math.sin(a);
+ const stone=ball(picnicArt,i%2?'#f2dcc8':'#f9e8da',x,.19,z,.38,.075,.28);stone.rotation.y=a;
+}
+tinyPicnicBlanket(picnicArt,-2.1,1.8);plushStool(picnicArt,-1.55,-1.35);
+miniCrate(picnicArt,3.15,2.3);miniLantern(picnicArt,-3.1,-2.2);
+for(let i=0;i<16;i++){const x=-2.8+(i%8)*.75,z=i<8?-3.3:3.3;
+ tinyDaisy(picnicArt,x,.44,z,i%3===0?'#f4c3d1':'#fff8e9',.7);}
+// Kitchen accessories live in the kitchen group and are visible only there.
+for(let j=0;j<6;j++){
+ const x=-2.55+j*1.0;
+ const cup=group(counter,x,1.01,-1.22);
+ mesh(new THREE.CylinderGeometry(.15,.12,.19,12),'#fff7e8',cup,0,.10,0);
+ ball(cup,['#f3b8bf','#e7c78e','#d0b8e1'][j%3],0,.24,0,.12,.09,.12);
+}
+for(let j=0;j<4;j++){const x=j%2?2.7:-2.7,z=j<2?-.95:.9;
+ const plate=mesh(new THREE.CylinderGeometry(.34,.34,.055,20),'#fff5e8',counter,x,.99,z);
+ ball(counter,j%2?'#e9b3b8':'#efce94',x,1.14,z,.17,.15,.17);
+}
+// Hand-made, CSS-drawn miniature ingredient icons: no system emoji in inventory.
+const ingredientKinds={strawberry:'berry',raspberry:'berry',blueberry:'berry',mint:'leaf',apple:'round',cherry:'berry',peach:'round',lemon:'citrus',mushroom:'fungus',hazelnut:'nut',honey:'jar',tomato:'round',pumpkin:'round',wheat:'leaf',carrot:'root'};
+let bagExpanded=false;
+function bagMarkup(){
+ const needed=desiredRecipe?recipes[desiredRecipe].need:{};
+ const ordered=Object.entries(ingredientCatalog).sort((a,b)=>Number(!!needed[b[0]])-Number(!!needed[a[0]])||pantry[b[0]]-pantry[a[0]]);
+ const shown=bagExpanded?ordered:ordered.filter(([id])=>pantry[id]||needed[id]);
+ const entries=shown.length?shown.map(([id,v])=>`<button type="button" data-ingredient="${id}" class="bag-item ${needed[id]?'bag-needed':''}" aria-label="查看${v[1]}的采集地点"><i class="bag-icon ${ingredientKinds[id]}" style="--ingredient:${v[3]}"></i><span>${v[1]}</span><b>${pantry[id]}${needed[id]?`/${needed[id]}`:''}</b></button>`).join(''):'<div class="bag-empty">还没有食材，去小世界探索吧</div>';
+ return `<div class="bag-grid">${entries}</div><button type="button" id="bag-expand">${bagExpanded?'收起':'查看全部 15 种'} ${bagExpanded?'⌃':'⌄'}</button>`;
+}
+
 // Compact HUD: only level, count and controls. Remove the long side explanation.
 const style43=document.createElement('style');style43.textContent=`
 header{top:3.5%;left:3%;z-index:1}header h1{font-family:Arial Rounded MT Bold,Trebuchet MS,sans-serif;font-size:clamp(34px,5.4vw,79px);font-weight:1000;line-height:.95;max-width:340px;color:#eaa396;letter-spacing:-3px;-webkit-text-stroke:8px #fffaf4;paint-order:stroke fill;filter:drop-shadow(0 3px 0 #e4b8aa)}header p,.eyebrow{display:none}.mission{width:150px;top:5%;right:3%;padding:8px 14px;border-radius:24px}.mission small,.mission progress{display:none}#score{font-weight:bold;color:#bd7771;margin:6px;font-size:24px}.tools{font-size:10px;margin:5px 0}.tools button{padding:5px 8px}#instructions{left:3%;top:34%;bottom:auto;transform:none;width:165px;white-space:normal;text-align:left;padding:10px 12px;font-size:13px;line-height:1.6;border:2px solid #edc6ba;border-radius:12px;background:#fff7e9e0;color:#996d56}#hint{bottom:20px;font-size:12px;background:#fff8e8dc}
@@ -901,16 +1253,57 @@ header{top:3.5%;left:3%;z-index:1}header h1{font-family:Arial Rounded MT Bold,Tr
 #recipe-card{position:fixed;z-index:12;right:15px;top:112px;max-width:215px;background:#fff9efed;border:2px solid #ebc7b8;border-radius:16px;padding:10px 12px;color:#9d7068;font-size:12px;line-height:1.65}
 .recipe-head{font-size:14px;font-weight:900}
 #pantry-count{margin-top:7px;font-size:11px;line-height:1.9;max-height:180px;overflow:auto}
-#scene-curtain{position:fixed;inset:0;background:#faeee9;opacity:0;pointer-events:none;z-index:15;transition:opacity .4s ease}
+#scene-curtain{position:fixed;inset:0;background:#faeee9;opacity:0;pointer-events:none;z-index:15;transition:opacity .15s ease}
 #scene-curtain.on{opacity:1}
 #cook-ui{z-index:22}
+#music-toggle{position:fixed;z-index:28;left:14px;bottom:18px;background:#fff8e9e8;color:#a87973;border:2px solid #efc8bb;border-radius:22px;padding:10px 14px;font-size:12px;font-weight:800;cursor:pointer}
+#choice-feedback{margin-top:12px;max-width:410px;color:#a7776b;line-height:1.7;font-size:13px}
+#choice-preview{font-size:42px;line-height:1.2;filter:drop-shadow(0 3px 3px #dbb7aa)}
+#choice-start,#choice-change{margin:8px 4px 0;padding:10px 14px;font-size:13px}
+.cook-choice button.selected{background:#f6d9c9!important;border-color:#c68d83!important;box-shadow:0 0 0 4px #fff3e4,0 5px 15px #d7b4a4}
+#recipe-choose{max-height:84vh;overflow:auto}
+@media(max-width:650px){#music-toggle{bottom:8px;left:8px;font-size:10px;padding:7px 10px}#choice-feedback{font-size:11px}#choice-preview{font-size:27px}}
 #recipe-choose{top:53%}
 .cook-choice{flex-wrap:wrap;justify-content:center}
 .cook-choice button{min-width:100px;min-height:110px}
 .mission{display:none}
 @media(max-width:650px){#world-nav{top:6px;gap:2px;padding:4px}#world-nav button{font-size:10px;padding:7px}#recipe-card{top:65px;right:8px;font-size:10px;padding:7px;max-width:145px}header{top:105px}#recipe-choose{top:52%;max-width:95vw}.cook-choice button{min-width:80px;min-height:85px;font-size:25px}}
+
+#recipe-card{max-width:248px;min-width:205px;padding:12px 13px;background:#fff9f2f5;box-shadow:0 7px 22px #bc948b2b}
+.recipe-head{font-size:15px;padding-bottom:6px;border-bottom:1px dashed #e8c6b7}
+#recipe-detail{font-size:11px;line-height:1.7;margin:8px 0;color:#a2796b}
+.bag-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0}
+.bag-item{display:flex;align-items:center;gap:6px;padding:6px 5px;border-radius:10px;background:#fff1e6;min-width:0;font-size:10px}
+.bag-item span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.bag-item b{font-size:10px;color:#b07869}
+.bag-needed{background:#f9e3d9;outline:1px solid #ecc5b9}
+.bag-icon{position:relative;display:block;flex:none;width:21px;height:21px;border-radius:50%;background:var(--ingredient);box-shadow:inset -3px -3px 0 #7e5d5230,0 2px 0 #ffffffb5}
+.bag-icon.berry{border-radius:55% 55% 65% 65%;transform:rotate(-10deg)}
+.bag-icon.berry:before,.bag-icon.round:before,.bag-icon.citrus:before{content:'';position:absolute;width:9px;height:6px;top:-3px;left:8px;background:#91b78a;border-radius:100% 0 100% 0;transform:rotate(-25deg)}
+.bag-icon.leaf{border-radius:90% 0 90% 0;transform:rotate(35deg)}
+.bag-icon.root{border-radius:55% 55% 80% 80%;transform:rotate(25deg);width:15px}
+.bag-icon.root:before{content:'';position:absolute;width:12px;height:7px;top:-4px;background:#91b78a;border-radius:70% 0}
+.bag-icon.fungus{border-radius:90% 90% 20% 20%;height:14px;margin-bottom:7px}
+.bag-icon.fungus:after{content:'';position:absolute;width:7px;height:8px;left:7px;top:13px;background:#f5e5d3;border-radius:2px}
+.bag-icon.jar{border-radius:5px;width:18px;height:19px;border-top:4px solid #fff1d4}
+.bag-icon.nut{border-radius:70% 70% 90% 90%}
+.bag-icon.citrus{border-radius:60% 40% 60% 40%;transform:rotate(-20deg)}
+#bag-expand{border:0;background:#f7e4d9;border-radius:10px;padding:7px 10px;width:100%;color:#aa776b;font-size:11px;font-weight:800;cursor:pointer}
+.bag-empty{grid-column:1/-1;font-size:11px;color:#b28b7f;line-height:1.6}
+#world-nav button.bag-target{background:#f5d99d;box-shadow:0 0 0 2px #d9ad76 inset}
+#bag-location{display:flex;flex-direction:column;gap:5px;background:#fff3dd;border:1px solid #edc9a8;border-radius:12px;padding:9px;margin-top:8px;color:#966c59}
+#bag-location[hidden]{display:none!important}
+#bag-location strong{font-size:13px}
+#bag-location span{font-size:12px;font-weight:800}
+#bag-location small{font-size:10px;line-height:1.4}
+#bag-go{border:0;background:#eec8a8;color:#855f51;border-radius:9px;padding:8px 5px;cursor:pointer;font-weight:800;font-size:11px}
+.bag-item{border:0;text-align:left;font-family:inherit;cursor:pointer;color:inherit}
+.bag-item:hover,.bag-item:focus-visible{background:#f7d6c6;outline:2px solid #e6b5a3}
+#music-volume{position:fixed;z-index:29;bottom:18px;left:144px;width:120px;accent-color:#d18c91;cursor:pointer}
+#music-volume-label{position:fixed;z-index:29;bottom:42px;left:147px;font-size:10px;color:#a87973}
+@media(max-width:650px){#recipe-card{min-width:0;max-width:158px} .bag-grid{grid-template-columns:1fr;gap:3px}.bag-item{padding:3px 5px}#music-volume{bottom:13px;left:116px;width:78px}#music-volume-label{bottom:37px;left:118px}}
 `;document.head.appendChild(style43);
 const title43=document.querySelector('header h1');if(title43)title43.innerHTML='Paw Paw<br>Picnic';
 const winCopy=document.querySelector('#finish .card p');if(winCopy)winCopy.innerHTML='✨ 创意料理完成！<br>下一关：完美野餐。';
-document.title='Paw Paw Picnic 5.4 · 自由采集';
+document.title='Paw Paw Picnic 5.9 · 食材地图与音乐增强';
 reset();$('#loading').hidden=true;tick();
