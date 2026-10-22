@@ -154,7 +154,7 @@ for(let i=0;i<54;i++){
   if(i%7===0)mushroom(x,z,.43+(i%3)*.1);
   else flower(x,z,col,.42+(i%5)*.095);
 }
-// 低矮的糖果色灌木与彩色石子。
+// 低矮的Candy色灌木与彩色石子。
 for(let i=0;i<22;i++){
   const z=-3.5+(i%11)*.67, x=(i<11?-1:1)*4.1;
   ball(scene,i%3===0?'#e9c5d9':'#bcd7ac',x,.24,z,.22,.20,.23);
@@ -162,7 +162,7 @@ for(let i=0;i<22;i++){
 for(let i=0;i<34;i++){
   const x=-3.6+((i*13)%37)/37*7.2;
   const z=-3.25+((i*19)%41)/41*6.5;
-  // 只在边缘摆放石子，避免遮住草莓和小狗。
+  // 只在边缘摆放石子，避免遮住Strawberry和小狗。
   if(Math.abs(x)>3.25)ball(scene,i%2?'#fff0dc':'#eac9d7',x,.15,z,.10,.035,.075);
 }
 
@@ -214,14 +214,14 @@ for(const x of [-.22,.22]){ball(head,'#493d3e',x,.2,.445,.067,.085,.045);ball(he
 ball(head,'#9a6570',0,.005,.61,.09,.065,.05);ball(head,'#eeb0ad',0,-.2,.565,.055,.075,.025);
 const scarf=mesh(new THREE.TorusGeometry(.32,.085,8,24),'#cf8d9e',dog,0,.82,.14);scarf.rotation.x=Math.PI/2;
 box(dog,'#cf8d9e',.2,.65,.48,.16,.32,.09);
-// 小狗的奶油眉毛、额头毛、爪垫和胸前小铃铛。
+// 小狗的Cream眉毛、额头毛、爪垫和胸前小铃铛。
 for(const x of [-.23,.23])ball(head,'#fff9ed',x,.38,.39,.13,.055,.065);
 ball(head,'#fff9e7',0,.55,.02,.21,.13,.16);
 ball(dog,'#fff9e8',0,.47,.49,.29,.28,.13);
 ball(dog,'#f6d99d',.21,.60,.56,.105,.105,.09);
 for(const x of [-.28,.28])ball(dog,'#f5c5c7',x,.10,.47,.095,.035,.07);
 const tail=group(dog,0,.7,-.49);const tailMesh=ball(tail,'#bd9479',0,.15,-.13,.13,.3,.13);tailMesh.rotation.x=-.65;
-// 草莓使用旋转曲面：圆润肩部、收尖底端，独立叶片及表面种子。
+// Strawberry使用旋转曲面：圆润肩部、收尖底端，独立叶片及表面种子。
 function strawberry(parent,x,z){const g=group(parent,x,.55,z);const points=[];for(let i=0;i<=20;i++){const t=i/20;points.push(new THREE.Vector2(.37*Math.pow(Math.sin(Math.PI*t),.8)*(.45+.55*t),-.33+t*.66));}mesh(new THREE.LatheGeometry(points,24),'#e87779',g);for(let row=1;row<5;row++){const t=row/5,r=.37*Math.pow(Math.sin(Math.PI*t),.8)*(.45+.55*t);for(let j=0;j<7;j++){const a=j*Math.PI*2/7+row*.45;const seed=ball(g,'#ffdfab',Math.sin(a)*(r+.006),-.33+t*.66,Math.cos(a)*(r+.006),.018,.032,.012);seed.rotation.y=a;}}for(let i=0;i<5;i++){const a=i*Math.PI*2/5;const leaf=ball(g,'#80ab77',Math.sin(a)*.13,.32,Math.cos(a)*.13,.075,.035,.2);leaf.rotation.y=a;}return g;}
 const berries=[[-3,2],[-2,-1.3],[.2,2.9],[3.8,.5],[1.8,-3.1]].map(([x,z],i)=>({mesh:strawberry(scene,x,z),x,z,phase:i,taken:false}));
 // Level 1: soft collection bursts and a berry that hops into the picnic basket.
@@ -292,14 +292,14 @@ const hiddenMushrooms=mushroomSpots.map(([x,z],i)=>{
 
 
 const ingredientCatalog={
- strawberry:['🍓','草莓',1,'#dc7182'],blueberry:['🫐','蓝莓',7,'#747eaf'],
- raspberry:['🍇','覆盆子',1,'#bf6380'],mint:['🌿','薄荷',7,'#8ab58b'],
- apple:['🍎','苹果',2,'#d97765'],cherry:['🍒','樱桃',2,'#b9546c'],
- peach:['🍑','桃子',8,'#e9aa8c'],lemon:['🍋','柠檬',8,'#e9d279'],
- mushroom:['🍄','蘑菇',3,'#e0b49b'],honey:['🍯','蜂蜜',9,'#d8a75c'],
- hazelnut:['🌰','榛子',3,'#ad8867'],tomato:['🍅','番茄',6,'#d97468'],
- pumpkin:['🎃','南瓜',10,'#d99b65'],wheat:['🌾','小麦',10,'#d6bb79'],
- carrot:['🥕','胡萝卜',6,'#e3a06c']
+ strawberry:['🍓','Strawberry',1,'#dc7182'],blueberry:['🫐','Blueberry',7,'#747eaf'],
+ raspberry:['🍇','Raspberry',1,'#bf6380'],mint:['🌿','Mint',7,'#8ab58b'],
+ apple:['🍎','Apple',2,'#d97765'],cherry:['🍒','Cherry',2,'#b9546c'],
+ peach:['🍑','Peach',8,'#e9aa8c'],lemon:['🍋','Lemon',8,'#e9d279'],
+ mushroom:['🍄','Mushroom',3,'#e0b49b'],honey:['🍯','Honey',9,'#d8a75c'],
+ hazelnut:['🌰','Hazelnut',3,'#ad8867'],tomato:['🍅','Tomato',6,'#d97468'],
+ pumpkin:['🎃','Pumpkin',10,'#d99b65'],wheat:['🌾','Wheat',10,'#d6bb79'],
+ carrot:['🥕','Carrot',6,'#e3a06c']
 };
 
 // 15 kinds of independent low-poly collectibles across four gathering zones.
@@ -360,11 +360,11 @@ function collectibleModel(parent,id){
 
 // Each harvest point retains its plant / hive after the produce is collected.
 const harvestProfiles={
- strawberry:['摘下成熟果实'],raspberry:['摘下成熟果实'],blueberry:['摘下果串'],mint:['剪取嫩叶'],
- apple:['转动果实，松开果柄','摘下苹果'],cherry:['剪下带柄果串'],peach:['托住果实，轻转果柄','摘下桃子'],lemon:['剪断果柄'],
- mushroom:['拨开落叶','轻转菌柄采下'],hazelnut:['拨开落叶','捡起成熟落果'],
- honey:['轻施烟，安抚蜂群','提起成熟蜜框','刮取封盖蜂蜜'],
- tomato:['托住果实','剪断果柄'],pumpkin:['剪断瓜藤','抱起南瓜'],wheat:['割下麦穗','收拢麦束'],carrot:['松开根部泥土','握住叶柄向上拔']
+ strawberry:['Pick the ripe fruit'],raspberry:['Pick the ripe fruit'],blueberry:['Pick the berry cluster'],mint:['Snip the young leaves'],
+ apple:['Twist the fruit to loosen the stem','Pick the apple'],cherry:['Snip the cherry cluster with its stems'],peach:['Support the fruit and gently twist the stem','Pick the peach'],lemon:['Snip the stem'],
+ mushroom:['Brush aside the fallen leaves','Gently twist the stalk to pick it'],hazelnut:['Brush aside the fallen leaves','Pick up the ripe fallen nuts'],
+ honey:['Gently smoke the hive to calm the bees','Lift a ripe honey frame','Scrape off the capped honey'],
+ tomato:['Support the fruit','Snip the stem'],pumpkin:['Snip the pumpkin vine','Lift the pumpkin'],wheat:['Cut the wheat heads','Gather the wheat into a bundle'],carrot:['Loosen the soil around the roots','Hold the leaf stems and pull upward']
 };
 const habitatObstacles=[];
 let harvestBusy=null, harvestNotice='', harvestNoticeUntil=0;
@@ -471,7 +471,7 @@ function resetPoint(item){
 function notifyHarvest(text){harvestNotice=text;harvestNoticeUntil=Date.now()+2000;}
 function gatherIngredient(item){
  if(!item||item.area!==level||item.taken||transition!=='play'||harvestBusy)return;
- if(Math.hypot(dog.position.x-item.x,dog.position.z-item.z)>1.65){notifyHarvest('先走近植株或采集点');return;}
+ if(Math.hypot(dog.position.x-item.x,dog.position.z-item.z)>1.65){notifyHarvest('Move closer to the plant or gathering spot first');return;}
  const steps=harvestProfiles[item.id];
  harvestBusy={item,age:0,duration:1.0,final:item.step===steps.length-1,base:item.model.position.clone()};
  item.tool.visible=true;notifyHarvest(steps[item.step]+'…');
@@ -492,11 +492,11 @@ function animateHarvest(dt){
  if(i.cover)i.cover.visible=false;
  if(h.final){
   i.taken=true;i.readyAt=Date.now()+RESPAWN_MS;i.model.visible=false;pantry[i.id]++;playSFX('pick');
-  updateHUD();notifyHarvest(`${ingredientCatalog[i.id][0]} ${ingredientCatalog[i.id][1]} +1 · 30 秒后再生`);
- }else notifyHarvest('再按 E / 点击：'+harvestProfiles[i.id][i.step]);
+  updateHUD();notifyHarvest(`${ingredientCatalog[i.id][0]} ${ingredientCatalog[i.id][1]} +1 · Regrows in 30 seconds`);
+ }else notifyHarvest('Press E / click again: '+harvestProfiles[i.id][i.step]);
 }
 // Eight environments have distinct silhouettes, ground surfaces and landmarks.
-const habitatThemes={1:['#c7d4a1','花篱小院'],7:['#a9c1ae','溪畔小径'],2:['#bdc68b','晴风果园'],8:['#d8c3ad','暖石庭院'],3:['#939a79','苔影森林'],9:['#d4ce9b','风铃花谷'],6:['#bca183','篱边菜圃'],10:['#c8b177','金穗农场']};
+const habitatThemes={1:['#c7d4a1','Flower Yard'],7:['#a9c1ae','Creekside Path'],2:['#bdc68b','Sunny Orchard'],8:['#d8c3ad','Warmstone Courtyard'],3:['#939a79','Mossy Forest'],9:['#d4ce9b','Bellflower Valley'],6:['#bca183','Garden Patch'],10:['#c8b177','Golden Wheat Farm']};
 for(const [key,root] of Object.entries(gatherWorlds)){
  const area=+key;box(root,habitatThemes[area][0],0,.10,0,9.55,.10,7.55,.08);
  const decor=group(root);
@@ -734,53 +734,53 @@ let recipe=null,selectedTopping=null,placedCount=0;
 
 const pantry=Object.fromEntries(Object.keys(ingredientCatalog).map(k=>[k,0]));
 const recipes={
- pudding:{name:'🐱 动物布丁',need:{strawberry:2,cherry:1,blueberry:1}},
- pizza:{name:'🍕 森林披萨',need:{mushroom:2,tomato:2,wheat:1}},
- cake:{name:'🍓 草莓甜品',need:{strawberry:3,raspberry:1,honey:1}}
+ pudding:{name:'🐱 Animal Pudding',need:{strawberry:2,cherry:1,blueberry:1}},
+ pizza:{name:'🍕 Forest Pizza',need:{mushroom:2,tomato:2,wheat:1}},
+ cake:{name:'🍓 Strawberry Dessert',need:{strawberry:3,raspberry:1,honey:1}}
 };
 let desiredRecipe=null,finishedRecipe=null;
 
 const toppingOptions={
  pudding:[
-  {id:'strawberry',label:'🍓 草莓',color:'#e87e8d'},
-  {id:'cherry',label:'🍒 樱桃',color:'#ba5367'},
-  {id:'cream',label:'☁️ 奶油',color:'#fff6e6'},
-  {id:'waffle',label:'🧇 华夫饼',color:'#e9b86e'},
-  {id:'candy',label:'🎀 糖果',color:'#bca5e7'},
-  {id:'blueberry',label:'🫐 蓝莓',color:'#747eaf'},
-  {id:'raspberry',label:'🍇 覆盆子',color:'#bf6380'},
-  {id:'mint',label:'🌿 薄荷',color:'#8ab58b'},
-  {id:'peach',label:'🍑 桃子',color:'#e9aa8c'},
-  {id:'honey',label:'🍯 蜂蜜',color:'#d8a75c'}
+  {id:'strawberry',label:'🍓 Strawberry',color:'#e87e8d'},
+  {id:'cherry',label:'🍒 Cherry',color:'#ba5367'},
+  {id:'cream',label:'☁️ Cream',color:'#fff6e6'},
+  {id:'waffle',label:'🧇 Waffle',color:'#e9b86e'},
+  {id:'candy',label:'🎀 Candy',color:'#bca5e7'},
+  {id:'blueberry',label:'🫐 Blueberry',color:'#747eaf'},
+  {id:'raspberry',label:'🍇 Raspberry',color:'#bf6380'},
+  {id:'mint',label:'🌿 Mint',color:'#8ab58b'},
+  {id:'peach',label:'🍑 Peach',color:'#e9aa8c'},
+  {id:'honey',label:'🍯 Honey',color:'#d8a75c'}
  ],
  cake:[
-  {id:'strawberry',label:'🍓 草莓',color:'#e87e8d'},
-  {id:'cream',label:'☁️ 奶油',color:'#fff6e6'},
-  {id:'cherry',label:'🍒 樱桃',color:'#ba5367'},
-  {id:'candy',label:'🎀 糖果',color:'#bca5e7'},
-  {id:'blueberry',label:'🫐 蓝莓',color:'#747eaf'},
-  {id:'raspberry',label:'🍇 覆盆子',color:'#bf6380'},
-  {id:'mint',label:'🌿 薄荷',color:'#8ab58b'},
-  {id:'peach',label:'🍑 桃子',color:'#e9aa8c'},
-  {id:'honey',label:'🍯 蜂蜜',color:'#d8a75c'}
+  {id:'strawberry',label:'🍓 Strawberry',color:'#e87e8d'},
+  {id:'cream',label:'☁️ Cream',color:'#fff6e6'},
+  {id:'cherry',label:'🍒 Cherry',color:'#ba5367'},
+  {id:'candy',label:'🎀 Candy',color:'#bca5e7'},
+  {id:'blueberry',label:'🫐 Blueberry',color:'#747eaf'},
+  {id:'raspberry',label:'🍇 Raspberry',color:'#bf6380'},
+  {id:'mint',label:'🌿 Mint',color:'#8ab58b'},
+  {id:'peach',label:'🍑 Peach',color:'#e9aa8c'},
+  {id:'honey',label:'🍯 Honey',color:'#d8a75c'}
  ],
  pizza:[
-  {id:'cheese',label:'🧀 芝士',color:'#f6df8c'},
-  {id:'tomato',label:'🍅 番茄',color:'#e77767'},
-  {id:'mushroom',label:'🍄 蘑菇',color:'#e7cbb1'},
-  {id:'pepper',label:'🫑 彩椒',color:'#91b980'},
-  {id:'olive',label:'🫒 橄榄',color:'#554e4b'},
-  {id:'tomato',label:'🍅 番茄',color:'#d97468'},
-  {id:'carrot',label:'🥕 胡萝卜',color:'#e3a06c'},
-  {id:'pumpkin',label:'🎃 南瓜',color:'#d99b65'}
+  {id:'cheese',label:'🧀 Cheese',color:'#f6df8c'},
+  {id:'tomato',label:'🍅 Tomato',color:'#e77767'},
+  {id:'mushroom',label:'🍄 Mushroom',color:'#e7cbb1'},
+  {id:'pepper',label:'🫑 Bell Pepper',color:'#91b980'},
+  {id:'olive',label:'🫒 Olive',color:'#554e4b'},
+  {id:'tomato',label:'🍅 Tomato',color:'#d97468'},
+  {id:'carrot',label:'🥕 Carrot',color:'#e3a06c'},
+  {id:'pumpkin',label:'🎃 Pumpkin',color:'#d99b65'}
  ]
 };
 const cookUI=document.createElement('div');cookUI.id='cook-ui';
-cookUI.innerHTML=`<div id="recipe-choose" class="cook-card"><div class="cook-title">今天做什么？</div><div class="cook-choice"><button type="button" data-recipe="pudding">🍮<span>动物布丁</span></button><button type="button" data-recipe="pizza">🍕<span>披萨</span></button><button type="button" data-recipe="cake">🍓<span>草莓甜品</span></button></div></div><div id="cook-work" hidden><div id="cook-palette" aria-label="食材选择"></div><div class="cook-actions"><span id="cook-count">点击配料，再点食物装饰</span><button id="cook-finish" type="button">✨ 完成制作</button></div></div>`;
+cookUI.innerHTML=`<div id="recipe-choose" class="cook-card"><div class="cook-title">What shall we make today?</div><div class="cook-choice"><button type="button" data-recipe="pudding">🍮<span>Animal Pudding</span></button><button type="button" data-recipe="pizza">🍕<span>Pizza</span></button><button type="button" data-recipe="cake">🍓<span>Strawberry Dessert</span></button></div></div><div id="cook-work" hidden><div id="cook-palette" aria-label="Ingredient selection"></div><div class="cook-actions"><span id="cook-count">Choose a topping, then click the food to decorate</span><button id="cook-finish" type="button">✨ Finish Cooking</button></div></div>`;
 document.body.appendChild(cookUI);
 const cookChoice=cookUI.querySelector('#recipe-choose');
 const choiceFeedback=document.createElement('div');choiceFeedback.id='choice-feedback';
-choiceFeedback.innerHTML='<div id="choice-preview">🍮</div><div id="choice-message">选择你想制作的料理</div><button id="choice-start" type="button" hidden>🌿 开始准备食材</button><button id="choice-change" type="button" hidden>↩ 换一个食谱</button>';
+choiceFeedback.innerHTML='<div id="choice-preview">🍮</div><div id="choice-message">Choose a dish to make</div><button id="choice-start" type="button" hidden>🌿 Gather Ingredients</button><button id="choice-change" type="button" hidden>↩ Choose Another Recipe</button>';
 cookChoice.appendChild(choiceFeedback);
 
 const cookWork=cookUI.querySelector('#cook-work');
@@ -797,10 +797,10 @@ function chooseRecipe(type){
   const missing=Object.entries(recipes[type].need).map(([id,n])=>`${ingredientCatalog[id][0]} ${ingredientCatalog[id][1]} ${pantry[id]}/${n}`).join(' · ');
   cookChoice.querySelectorAll('[data-recipe]').forEach(b=>b.classList.toggle('selected',b.dataset.recipe===type));
   cookChoice.querySelector('#choice-preview').textContent=type==='pizza'?'🍕':type==='cake'?'🍓':'🍮';
-  cookChoice.querySelector('#choice-message').innerHTML=`<strong>${recipes[type].name}</strong><br>还需要：${missing}<br>选择一个地点去采集吧！`;
+  cookChoice.querySelector('#choice-message').innerHTML=`<strong>${recipes[type].name}</strong><br>Still needed: ${missing}<br>Choose a place to gather ingredients!`;
   cookChoice.querySelector('#choice-start').hidden=false;
   cookChoice.querySelector('#choice-change').hidden=false;
-  $('#hint').textContent='已选好食谱！点击「开始准备食材」';
+  $('#hint').textContent='Recipe selected! Click Gather Ingredients';
   playSFX('choose');return;
  }
  recipe=type;selectedTopping=null;placedCount=0;updateHUD();
@@ -811,26 +811,26 @@ function chooseRecipe(type){
   btn.addEventListener('click',()=>{
    selectedTopping=option;
    for(const el of cookPalette.children)el.classList.toggle('chosen',el===btn);
-   $('#hint').textContent=`${option.label} · 点击食物添加`;
+   $('#hint').textContent=`${option.label} · Click the food to add it`;
   });
   cookPalette.appendChild(btn);
  }
  cookPalette.firstElementChild?.click();
  cookChoice.hidden=true;cookWork.hidden=false;
- $('#hint').textContent='选择配料，点击食物自由装饰';
+ $('#hint').textContent='Choose toppings and click the food to decorate freely';
 }
 cookChoice.querySelectorAll('[data-recipe]').forEach(btn=>btn.addEventListener('click',()=>chooseRecipe(btn.dataset.recipe)));
 cookChoice.querySelector('#choice-start').addEventListener('click',()=>travel(1));
 cookChoice.querySelector('#choice-change').addEventListener('click',()=>{
  desiredRecipe=null;cookChoice.querySelectorAll('[data-recipe]').forEach(b=>b.classList.remove('selected'));
- cookChoice.querySelector('#choice-message').textContent='选择你想制作的料理';
+ cookChoice.querySelector('#choice-message').textContent='Choose a dish to make';
  cookChoice.querySelector('#choice-preview').textContent='🍮';
  cookChoice.querySelector('#choice-start').hidden=true;cookChoice.querySelector('#choice-change').hidden=true;updateHUD();
 });
 function addTopping(x,z){
  if(!selectedTopping||!recipe||won)return;
  const id=selectedTopping.id;
- if(id in pantry&&pantry[id]<1){$('#hint').textContent='这个食材用完啦，去采集更多吧';return;}
+ if(id in pantry&&pantry[id]<1){$('#hint').textContent='You are out of this ingredient. Gather some more!';return;}
  if(id in pantry)pantry[id]--;
  const g=group(toppings,x,recipe==='pudding'?1.02:.31,z);
  const c=selectedTopping.color;
@@ -865,7 +865,7 @@ function addTopping(x,z){
  }
  g.rotation.y=Math.random()*Math.PI*2;
  placedCount++;updateHUD();
- cookUI.querySelector('#cook-count').textContent=`已添加 ${placedCount} 个装饰 · 可以继续`;
+ cookUI.querySelector('#cook-count').textContent=`${placedCount} decorations added · Keep decorating`;
  pickupBurst(counter.position.x+x,counter.position.z+z);
 }
 function cookPointer(e){
@@ -884,7 +884,7 @@ function cookPointer(e){
 }
 renderer.domElement.addEventListener('pointerup',cookPointer);
 cookFinish.addEventListener('click',()=>{
- if(placedCount<1){$('#hint').textContent='至少添加一个喜欢的装饰 ✨';return;}
+ if(placedCount<1){$('#hint').textContent='Add at least one decoration you like ✨';return;}
  finishedRecipe=recipe;
  if(picnic.userData.finishedFood)picnic.remove(picnic.userData.finishedFood);
  const foodDisplay=foodRoot.clone(true);
@@ -905,12 +905,12 @@ let transition='opening',transitionAge=0,treeShake=0,shakeCount=0;
 let pendingLevel=null;
 const keys=new Set();
 const TOTAL=5;
-const worldNames={1:'花篱小院',7:'溪畔小径',2:'晴风果园',8:'暖石庭院',3:'苔影森林',9:'风铃花谷',6:'篱边菜圃',10:'金穗农场',4:'创意厨房',5:'野餐草地'};
-const nav=document.createElement('nav');nav.id='world-nav';nav.setAttribute('aria-label','地点导航');
+const worldNames={1:'Flower Yard',7:'Creekside Path',2:'Sunny Orchard',8:'Warmstone Courtyard',3:'Mossy Forest',9:'Bellflower Valley',6:'Garden Patch',10:'Golden Wheat Farm',4:'Creative Kitchen',5:'Picnic Meadow'};
+const nav=document.createElement('nav');nav.id='world-nav';nav.setAttribute('aria-label','Location navigation');
 nav.innerHTML=[4,1,7,2,8,3,9,6,10,5].map(n=>`<button type="button" data-world="${n}">${worldNames[n]}</button>`).join('');
 document.body.appendChild(nav);
 const recipeCard=document.createElement('section');recipeCard.id='recipe-card';
-recipeCard.innerHTML='<div class="recipe-head">🍮 今日食谱</div><div id="recipe-detail"></div><div id="pantry-count"></div><div id="bag-location" hidden></div>';
+recipeCard.innerHTML='<div class="recipe-head">🍮 Today&#39;s Recipe</div><div id="recipe-detail"></div><div id="pantry-count"></div><div id="bag-location" hidden></div>';
 document.body.appendChild(recipeCard);
 recipeCard.addEventListener('click',e=>{
  const item=e.target.closest('[data-ingredient]');
@@ -927,7 +927,7 @@ function showIngredientLocation(id){
  const steps=harvestProfiles[id].join(' → ');
  const card=recipeCard.querySelector('#bag-location');
  card.hidden=false;
- card.innerHTML=`<strong>${label}</strong><span>📍 ${worldNames[destination]}</span><small>${steps}</small><button type="button" id="bag-go" data-destination="${destination}">前往${worldNames[destination]} ↗</button>`;
+ card.innerHTML=`<strong>${label}</strong><span>📍 ${worldNames[destination]}</span><small>${steps}</small><button type="button" id="bag-go" data-destination="${destination}">Go to ${worldNames[destination]} ↗</button>`;
  nav.querySelectorAll('[data-world]').forEach(b=>b.classList.toggle('bag-target',+b.dataset.world===destination));
 }
 
@@ -940,8 +940,8 @@ function recipeNeeds(){
 function updateHUD(){
  $('#score').textContent=worldNames[level];
  $('#progress').max=5;$('#progress').value=Math.min(5,Object.values(pantry).reduce((a,b)=>a+b,0));
- $('#instructions').innerHTML=level===4?'点击食谱选择 · 点击食物装饰':level===5?'欣赏你的作品':'WASD / 方向键移动 · 靠近后按 E 或点击 · 按提示分步采集';
- $('#collect').textContent='互动 E';
+ $('#instructions').innerHTML=level===4?'Click a recipe to choose · Click the food to decorate':level===5?'Enjoy your creation':'WASD / Arrow keys to move · Approach and press E or click · Follow the gathering steps';
+ $('#collect').textContent='Interact E';
  recipeCard.querySelector('#recipe-detail').innerHTML=recipeNeeds();
  recipeCard.querySelector('#pantry-count').innerHTML=bagMarkup();
  if(selectedIngredient)showIngredientLocation(selectedIngredient);
@@ -965,11 +965,11 @@ function enterLevel(n){
  cookUI.hidden=true;$('#finish').hidden=true;
  revealContents();updateHUD();
  if(n===4&&desiredRecipe&&!recipe&&hasIngredients(desiredRecipe))chooseRecipe(desiredRecipe);
- if(n===5){$('#hint').textContent=finishedRecipe?`你的${recipes[finishedRecipe].name}完成啦！✨`:'自由野餐 · 可以先探索，做好料理再带过来';}
+ if(n===5){$('#hint').textContent=finishedRecipe?`Your ${recipes[finishedRecipe].name} is ready!✨`:'Free picnic · Explore, cook a dish, and bring it here';}
 }
 function travel(n){
  if(![1,2,3,4,5,6,7,8,9,10].includes(n)||transition!=='play'||n===level)return;
- if(harvestBusy){notifyHarvest('请等当前采集动作完成');return;}
+ if(harvestBusy){notifyHarvest('Please wait for the current gathering action to finish');return;}
  clearFX();pendingLevel=n;transition='fadeout';transitionAge=0;keys.clear();cookUI.hidden=true;
  curtain.classList.add('on');
 }
@@ -989,7 +989,7 @@ function reset(){
 }
 function completeLevel(){
  won=true;partyTime=0;keys.clear();
- if(level===4){$('#hint').textContent='料理完成！去野餐草地看看吧 🧺';setTimeout(()=>{if(level===4&&won){won=false;travel(5);}},480);}
+ if(level===4){$('#hint').textContent='Your dish is ready! Visit the Picnic Meadow 🧺';setTimeout(()=>{if(level===4&&won){won=false;travel(5);}},480);}
 }
 function collect(target=nearest){
  if(level!==1||transition!=='play'||opening<2.3||!target||target.taken||Math.hypot(dog.position.x-target.x,dog.position.z-target.z)>1.35)return;
@@ -999,14 +999,14 @@ function collect(target=nearest){
 }
 function shakeAppleTree(){
  if(level!==2||transition!=='play'||opening<2.3)return;
- if(Math.hypot(dog.position.x-orchard.position.x,dog.position.z-orchard.position.z)>2.7){$('#hint').textContent='先靠近果树 🍒';return;}
+ if(Math.hypot(dog.position.x-orchard.position.x,dog.position.z-orchard.position.z)>2.7){$('#hint').textContent='Move closer to the fruit tree first 🍒';return;}
  treeShake=1;const a=apples.find(a=>!a.fallen);
  if(a){a.fallen=true;a.vy=.8;pantry.cherry++;updateHUD();}
  if(apples.every(a=>a.fallen))setTimeout(()=>{apples.forEach(a=>{a.fallen=false;a.vy=0;a.bounces=0;a.g.position.copy(a.origin);});},2200);
 }
 function discoverMushroom(target){
  if(level!==3||transition!=='play'||opening<2.3||!target||target.found)return;
- if(Math.hypot(dog.position.x-target.x,dog.position.z-target.z)>1.65){$('#hint').textContent='先靠近草丛 🍄';return;}
+ if(Math.hypot(dog.position.x-target.x,dog.position.z-target.z)>1.65){$('#hint').textContent='Move closer to the bushes first 🍄';return;}
  target.found=true;target.reveal=.001;pickupBurst(target.x,target.z);
  pantry.mushroom++;updateHUD();
  if(hiddenMushrooms.every(m=>m.found))setTimeout(()=>{gatherItems.forEach(item=>{item.taken=false;item.readyAt=0;resetPoint(item);item.g.visible=true;});
@@ -1014,8 +1014,8 @@ function discoverMushroom(target){
 }
 function action(){
  if(transition!=='play'||harvestBusy)return;
- if([1,2,3,6,7,8,9,10].includes(level)){const item=nearestIngredient();if(item)gatherIngredient(item);else notifyHarvest('走近其他采集点；已采过的食材 30 秒后恢复');}
- else if(level===4)$('#hint').textContent='选择食材，再点击甜品';
+ if([1,2,3,6,7,8,9,10].includes(level)){const item=nearestIngredient();if(item)gatherIngredient(item);else notifyHarvest('Try another gathering spot; harvested ingredients regrow in 30 seconds');}
+ else if(level===4)$('#hint').textContent='Choose an ingredient, then click the dessert';
  else travel(4);
 }
 const moveCodes=['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];
@@ -1078,12 +1078,12 @@ function tick(){
      legs.forEach((l,i)=>l.rotation.x=Math.sin(elapsed*12+i*Math.PI)*.3);
    }else{dog.position.y=.15;legs.forEach(l=>l.rotation.x=0);}
    const target=nearestIngredient();
-   const label=target?harvestProfiles[target.id][target.step]:'走近植株、果树或采集点探索';
-   $('#collect').textContent=harvestBusy?'采集中…':target?label:'互动 E';
-   $('#hint').textContent=Date.now()<harvestNoticeUntil?harvestNotice:target?`${ingredientCatalog[target.id][1]} · E / 点击：${label}`:'自由探索 · 采下的食材会消失 30 秒，植株会保留';
- }else if(transition!=='play')$('#hint').textContent='正在切换小世界…';
- else if(level===4)$('#hint').textContent='选择食谱，准备材料，再自由装饰';
- else if(level===5)$('#hint').textContent=finishedRecipe?'享受你的野餐时光':'自由野餐 · 也可以先去厨房做点心';
+   const label=target?harvestProfiles[target.id][target.step]:'Approach plants, fruit trees, or gathering spots to explore';
+   $('#collect').textContent=harvestBusy?'Gathering…':target?label:'Interact E';
+   $('#hint').textContent=Date.now()<harvestNoticeUntil?harvestNotice:target?`${ingredientCatalog[target.id][1]} · E / Click: ${label}`:'Explore freely · Harvested ingredients regrow in 30 seconds; plants stay in place';
+ }else if(transition!=='play')$('#hint').textContent='Traveling to the next little world…';
+ else if(level===4)$('#hint').textContent='Choose a recipe, gather ingredients, and decorate freely';
+ else if(level===5)$('#hint').textContent=finishedRecipe?'Enjoy your picnic':'Free picnic · Visit the kitchen to make a treat';
  tail.rotation.z=Math.sin(elapsed*9)*.3;ears.forEach((e,i)=>e.rotation.x=Math.sin(elapsed*4+i)*.05);
  for(let i=pickupFX.length-1;i>=0;i--){const f=pickupFX[i];f.age+=dt;const t=f.age;
    f.flying.position.set(THREE.MathUtils.lerp(f.x,3.55,Math.min(t,1)),.55+Math.sin(Math.min(t,1)*Math.PI)*1.45,THREE.MathUtils.lerp(f.z,3,Math.min(t,1)));
@@ -1133,7 +1133,7 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
 let audioContext=null,musicTimer=null,musicOn=false,musicStep=0,musicMaster=null;
 let musicVolume=.9;
 const musicButton=document.createElement('button');musicButton.id='music-toggle';musicButton.type='button';
-musicButton.textContent='♫ 开启音乐';musicButton.setAttribute('aria-label','开启或关闭背景音乐');document.body.appendChild(musicButton);
+musicButton.textContent='♫ Enable Music';musicButton.setAttribute('aria-label','Turn background music on or off');document.body.appendChild(musicButton);
 function tone(freq,duration=.24,volume=.028,shape='sine',delay=0){
  if(!audioContext||audioContext.state!=='running')return;
  const t=audioContext.currentTime+delay,o=audioContext.createOscillator(),gain=audioContext.createGain();
@@ -1153,16 +1153,16 @@ function musicBeat(){if(!musicOn)return;
  if(note!==null)tone(523.25*Math.pow(2,note/12),.30,.105,'sine');
  if(step%4===0){tone(base,.78,.070,'triangle');tone(base*1.5,.70,.052,'sine',.07);}
 }
-const volumeSlider=document.createElement('input');volumeSlider.type='range';volumeSlider.id='music-volume';volumeSlider.min='0';volumeSlider.max='100';volumeSlider.value='90';volumeSlider.setAttribute('aria-label','背景音乐音量');document.body.appendChild(volumeSlider);
-const volumeLabel=document.createElement('label');volumeLabel.id='music-volume-label';volumeLabel.htmlFor='music-volume';volumeLabel.textContent='音乐音量';document.body.appendChild(volumeLabel);
+const volumeSlider=document.createElement('input');volumeSlider.type='range';volumeSlider.id='music-volume';volumeSlider.min='0';volumeSlider.max='100';volumeSlider.value='90';volumeSlider.setAttribute('aria-label','Background music volume');document.body.appendChild(volumeSlider);
+const volumeLabel=document.createElement('label');volumeLabel.id='music-volume-label';volumeLabel.htmlFor='music-volume';volumeLabel.textContent='Music volume';document.body.appendChild(volumeLabel);
 volumeSlider.addEventListener('input',()=>{musicVolume=Number(volumeSlider.value)/100;if(musicMaster)musicMaster.gain.setTargetAtTime(musicVolume,audioContext.currentTime,.04);});
 musicButton.addEventListener('click',async()=>{
  try{if(!audioContext)audioContext=new (window.AudioContext||window.webkitAudioContext)();await audioContext.resume();
  if(!musicMaster){musicMaster=audioContext.createGain();musicMaster.gain.value=musicVolume;musicMaster.connect(audioContext.destination);}
- musicOn=!musicOn;musicButton.textContent=musicOn?'♫ 音乐开启 · 点击静音':'♫ 开启音乐';
+ musicOn=!musicOn;musicButton.textContent=musicOn?'♫ Music on · Click to mute':'♫ Enable Music';
  if(musicTimer)clearInterval(musicTimer);musicTimer=null;
  if(musicOn){musicBeat();musicTimer=setInterval(musicBeat,315);}
- }catch(err){musicButton.textContent='当前浏览器不支持音乐';}
+ }catch(err){musicButton.textContent='Music is unavailable in this browser';}
 });
 
 
@@ -1222,8 +1222,8 @@ function bagMarkup(){
  const needed=desiredRecipe?recipes[desiredRecipe].need:{};
  const ordered=Object.entries(ingredientCatalog).sort((a,b)=>Number(!!needed[b[0]])-Number(!!needed[a[0]])||pantry[b[0]]-pantry[a[0]]);
  const shown=bagExpanded?ordered:ordered.filter(([id])=>pantry[id]||needed[id]);
- const entries=shown.length?shown.map(([id,v])=>`<button type="button" data-ingredient="${id}" class="bag-item ${needed[id]?'bag-needed':''}" aria-label="查看${v[1]}的采集地点"><i class="bag-icon ${ingredientKinds[id]}" style="--ingredient:${v[3]}"></i><span>${v[1]}</span><b>${pantry[id]}${needed[id]?`/${needed[id]}`:''}</b></button>`).join(''):'<div class="bag-empty">还没有食材，去小世界探索吧</div>';
- return `<div class="bag-grid">${entries}</div><button type="button" id="bag-expand">${bagExpanded?'收起':'查看全部 15 种'} ${bagExpanded?'⌃':'⌄'}</button>`;
+ const entries=shown.length?shown.map(([id,v])=>`<button type="button" data-ingredient="${id}" class="bag-item ${needed[id]?'bag-needed':''}" aria-label="Find gathering locations for ${v[1]}"><i class="bag-icon ${ingredientKinds[id]}" style="--ingredient:${v[3]}"></i><span>${v[1]}</span><b>${pantry[id]}${needed[id]?`/${needed[id]}`:''}</b></button>`).join(''):'<div class="bag-empty">No ingredients yet. Explore the little worlds!</div>';
+ return `<div class="bag-grid">${entries}</div><button type="button" id="bag-expand">${bagExpanded?'Show less':'Show all 15 ingredients'} ${bagExpanded?'⌃':'⌄'}</button>`;
 }
 
 // Compact HUD: only level, count and controls. Remove the long side explanation.
@@ -1304,6 +1304,6 @@ header{top:3.5%;left:3%;z-index:1}header h1{font-family:Arial Rounded MT Bold,Tr
 @media(max-width:650px){#recipe-card{min-width:0;max-width:158px} .bag-grid{grid-template-columns:1fr;gap:3px}.bag-item{padding:3px 5px}#music-volume{bottom:13px;left:116px;width:78px}#music-volume-label{bottom:37px;left:118px}}
 `;document.head.appendChild(style43);
 const title43=document.querySelector('header h1');if(title43)title43.innerHTML='Paw Paw<br>Picnic';
-const winCopy=document.querySelector('#finish .card p');if(winCopy)winCopy.innerHTML='✨ 创意料理完成！<br>下一关：完美野餐。';
-document.title='Paw Paw Picnic 5.9 · 食材地图与音乐增强';
+const winCopy=document.querySelector('#finish .card p');if(winCopy)winCopy.innerHTML='✨ Your creative dish is ready!<br>Next stop: the perfect picnic.';
+document.title='Paw Paw Picnic 5.9 · Ingredient Map & Enhanced Music';
 reset();$('#loading').hidden=true;tick();
