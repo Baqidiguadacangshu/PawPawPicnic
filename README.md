@@ -48,7 +48,7 @@ This creates the core loop: **choose → explore → gather → check progress �
 
 ## Screenshots
 
-Actual screenshots captured from the [live game](https://baqidiguadacangshu.github.io/PawPawPicnic/) on 31 October 2026, at the browser's narrow viewport. These show the running interface without retouching.
+Actual screenshots captured from the [live game](https://baqidiguadacangshu.github.io/PawPawPicnic/) on 31 October 2026, in a desktop landscape viewport. These show the running interface without retouching.
 
 ### Choose a recipe
 
